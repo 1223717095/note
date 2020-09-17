@@ -1,0 +1,264 @@
+多线程基本用法
+	方法一
+	class MyThread extends Thread{
+		@Override
+		public void run(){
+			//具体逻辑
+		}
+	}
+	使用时new MyThread().start();
+	方法二
+	class MyThread implements Runnable{
+		@Override
+		public void run(){
+			//具体逻辑
+		}
+	}
+	MyThread myThread =new MyThread();
+	new Thread(myThread).start();
+
+	方法二的第2种实现方式(直接使用匿名类，不用专门定义一个类实现Runnable接口)
+	new Thread(new Runnable(){
+		@Override
+		public void run(){
+			//具体逻辑
+		}
+	}).start();
+
+android不允许在子线程中进行UI操作
+
+再开启的新线程中处理UI
+	private Handler handler = new Handler() {
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case UPDATE_TEXT:
+                    // 在这里可以进行UI操作
+                    text.setText("Nice to meet you");
+                    break;
+                default:
+                    break;
+            }
+        }
+    };
+    在新的线程中
+    Message message = new Message();
+    message.what = UPDATE_TEXT;
+    handler.sendMessage(message); // 将Message对象发送出去
+
+异步消息处理
+	Message消息
+		在线程之间传递信息 
+		message.what=1/.arg1/.arg2携带整数数据.obj携带一个object对象
+	Handler处理者
+		handler.sendMessage(message);发送消息
+		发送的消息会传递到handler的handlerMessage()中
+	MessageQueue消息队列
+		等待被处理的Message会存放在这里
+		每个线程只有一个MessageQueue对象
+	Looper
+		每个线程只有一个Looper对象
+		调用Looper.loop()会进入一个循环每当发现	MessageQueue存在一条消息就取出传递到handler的handlerMessage()中	
+
+
+
+异步消息处理
+	在主线程中创建一个Handler对象重写handlerMessage()用于处理消息
+	如果在子线程中需要UI操作就创建Message用handler.sendMessage(message);发送消息
+	Handler.handlerMessage()会收到消息并处理
+
+
+runOnUiThread()就是一个异步消息处理机制的接口封装
+	在子线程中
+	runOnUiThread(new Runnable(){
+		@Override
+		public void run(){
+			//进行UI操作
+		}
+	});
+
+使用AsyncTask进行异步消息处理
+	//创建一个类继承自AsyncTask
+	//泛型中第一个参数Params执行AsyncTask需要传入的参数
+	//	第二个参数Progress如果需要在界面上显示当前进度，此为进度单位	
+	//	第三个参数Result执行完毕后返回结果的类型
+	class DownloadTask extends AsyncTask<Void,Integer,Boolean>{
+	
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+	    //任务开始时初始化
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... voids) {
+	    //这里的所有代码都会在子线程中运行
+	    //需要更新UI就publicProgress()
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean aBoolean) {
+            super.onPostExecute(aBoolean);
+	    //doInBackground中return就会执行这个函数
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            super.onProgressUpdate(values);
+	    //doInBackground中调用publicProgress()就会执行这个函数
+	    //可以执行UI操作
+        }
+    }
+	启动任务
+	new DownloadTask().execute()
+
+
+创建服务
+	new->Service->Service
+	Exported表示是否允许其他应用程序访问
+	Enabled表示是否启用这个服务
+	
+	public class MyService extends Service {
+
+    @Override
+    //用于绑定服务，Service中唯一的一个抽象方法
+    public IBinder onBind(Intent intent) {
+        return mBinder;
+    }
+
+    @Override
+    //服务创建时调用(只会创建一次)
+    public void onCreate() {
+        super.onCreate();
+        
+    }
+
+    @Override
+    //服务启动时调用
+    public int onStartCommand(Intent intent, int flags, int startId) {
+    }
+
+    @Override
+    //服务销毁时调用
+    public void onDestroy() {
+    }
+
+}
+	服务需要在AndroidManifest.xml<applicaation>中注册
+		<service
+            		android:name=".MyService"
+            		android:enabled="true"
+            		android:exported="true" />
+        	<service android:name=".MyIntentService" />
+
+
+在活动启动服务
+	Intent startIntent = new Intent(this, MyService.class);
+        startService(startIntent);
+停止服务
+	Intent stopIntent = new Intent(this, MyService.class);
+        stopService(stopIntent); 
+	如果要在服务中停止自己
+		stopSelf();
+
+绑定服务（活动指挥服务工作）
+	将具体的服务类（继承自Binder的自定义类）写在服务中
+	实现活动中ServiceConnection()匿名类来获取服务中的服务类
+	bindService(bindIntent, connection, BIND_AUTO_CREATE); // 绑定服务
+	unbindService(connection); // 解绑服务
+
+	在MyService中
+	class DownloadBinder extends Binder {
+
+        public void startDownload() {
+            Log.d("MyService", "startDownload executed");
+        }
+
+        public int getProgress() {
+            Log.d("MyService", "getProgress executed");
+            return 0;
+        }
+
+    }
+	在活动中
+	private ServiceConnection connection = new ServiceConnection() {
+
+        @Override
+	//活动与服务连接断开时调用
+        public void onServiceDisconnected(ComponentName name) {
+        }
+
+        @Override
+	//活动与服务绑定时调用
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            downloadBinder = (MyService.DownloadBinder) service;
+            downloadBinder.startDownload();
+            downloadBinder.getProgress();
+        }
+    };
+	绑定服务
+	Intent bindIntent = new Intent(this, MyService.class);
+        bindService(bindIntent, connection, BIND_AUTO_CREATE); // 绑定服务BIND_AUTO_CREATE创建服务但不启动
+	解绑服务
+	unbindService(connection);
+	
+	
+	每个服务只有一个实例
+	不管调用多少次startService(startIntent);都只需调用一次stopService(stopIntent); 
+	活动只要被启动或被绑定就会一直处于运行状态，同时调用启动和绑定，就需要调用stopService()和unbindService(connection);才会调用onDestory()
+	服务会由于内存不足而被回收
+
+前台服务
+	不会由于内存不足而被回收
+	会在状态栏显示一栏通知
+	在MyService中的onCrate()
+	Intent intent = new Intent(this, MainActivity.class);
+        PendingIntent pi = PendingIntent.getActivity(this, 0, intent, 0);
+        Notification notification = new NotificationCompat.Builder(this)
+                .setContentTitle("This is content title")
+                .setContentText("This is content text")
+                .setWhen(System.currentTimeMillis())
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher))
+                .setContentIntent(pi)
+                .build();
+        startForeground(1, notification);
+
+
+服务应该在onStartCommand()中创建新的线程
+	
+
+IntentService(自动开启新线程运行服务，运行后自动销毁)
+	public class MyIntentService extends IntentService {
+
+    public MyIntentService() {
+        super("MyIntentService"); // 调用父类的有参构造函数
+    }
+
+    @Override
+    protected void onHandleIntent(Intent intent) {
+        // 打印当前线程的id
+        Log.d("MyIntentService", "Thread id is " + Thread.currentThread(). getId());
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.d("MyIntentService", "onDestroy executed");
+    }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,49 @@
+JMS selector（消息选择器）
+	生产者端需要设置消息属性
+	Message.setIntProperty("age",25)
+	
+	创建消费者时指定条件
+	MessageConsumer messageConsumer=session.createConsumer(destination，“age>23”);
+	
+	
+	
+	
+消息的异步接收
+	给消息接收者注册一个监听器，接收到消息会调用onMessage()
+	messageConsumer.setMessageListener(new MessageListener() {
+            @Override
+				public void onMessage(Message message) {
+                //做一些处理
+            }
+        });
+		
+		
+		
+持久化订阅
+	在pub/sub模式下订阅者需要先订阅且线程一直处于运行状态，不然可能会丢失数据
+	持久化订阅解决了这个问题
+	如果订阅者不在，消息先保存在ActiveMQ
+	
+	唯一id告诉MQ你是谁
+	connection.setClientID("id1");
+	在哪个topic上持久化订阅
+	MessageConsumer messageConsumer= session.createDurableSubscriber((Topic) destination,"id1");
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		

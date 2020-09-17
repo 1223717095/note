@@ -1,0 +1,29 @@
+内部类通常的使用方法是：
+	在外部类中有一个方法返回该内部类的引用
+
+在创建外部类对象之前是不可能创建内部类对象的（除非为静态内部类class static(嵌套类)）
+	Outter.Intter innter=new Outter.Intter();
+
+在内部类中取得外部类引用
+	外部类名.this
+
+告诉对象创建其某个内部类(如果内部类为private则不能使用该方法)
+	Outter outter=new Outter();
+	Inner inner=outter.new Intter();
+
+在方法中定义内部类
+	用于：如果这个方法需要返回一个接口的实例，创建类实现这个接口返回这个类实例
+
+
+匿名内部类（在一个类的方法中返回一个实现了接口，或者其他类的子类）
+	public Contents aaa() {
+		return new Contents(int i) {//i将传到基类（Contents）的构造器
+			public int bbb=1;
+			public void sss() {
+				
+			}
+		};
+	}
+	Contents是一个已经实现的类或者抽象类或者接口
+	如果匿名内部类使用到一个在外部定义的对象那要求其参数引用为final
+

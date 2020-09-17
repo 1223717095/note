@@ -1,0 +1,12 @@
+使用私有构造器(可以使用反射攻击)
+	在单例模式的类中构造器设为private
+	public static classname INSTANCE=new classname();
+	
+	或者是添加一个getInstance()的公有方法
+	private static classname INSTANCE=new classname();
+	public classname getInstance(){
+		return Instance;
+	}	
+	
+	
+枚举方法

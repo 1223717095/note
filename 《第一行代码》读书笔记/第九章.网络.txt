@@ -1,0 +1,263 @@
+声明网络权限
+	<uses-permission android:name="android.permission.INTERNET" />
+用WebView显示网页
+	在布局中使用<webview>
+	<WebView
+        	android:id="@+id/web_view"
+        	android:layout_width="match_parent"
+        	android:layout_height="match_parent" />
+	
+	在活动中
+	WebView webView = (WebView) findViewById(R.id.web_view);
+        webView.getSettings().setJavaScriptEnabled(true);
+        webView.setWebViewClient(new WebViewClient());
+        webView.loadUrl("https://www.baidu.com");
+	使用网络权限申请
+	<uses-permission android:name="android.permission.INTERNET"/>
+
+
+使用http协议访问网络
+	// 开启线程来发起网络请求
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                HttpURLConnection connection = null;
+                BufferedReader reader = null;
+                try {
+                    URL url = new URL("http://www.baidu.com");
+                    connection = (HttpURLConnection) url.openConnection();
+                    connection.setRequestMethod("GET");
+                    connection.setConnectTimeout(8000);
+                    connection.setReadTimeout(8000);
+                    InputStream in = connection.getInputStream();
+                    // 下面对获取到的输入流进行读取
+                    reader = new BufferedReader(new InputStreamReader(in));
+                    StringBuilder response = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        response.append(line);
+                    }
+                    showResponse(response.toString());//显示返回信息（自定义的方法）
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    if (reader != null) {
+                        try {
+                            reader.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    if (connection != null) {
+                        connection.disconnect();
+                    }
+                }
+            }
+        }).start();
+
+	private void showResponse(final String response) {
+        runOnUiThread(new Runnable() {//将线程切换到主线程（android不允许在子线程进行ui操作）
+            @Override
+            public void run() {
+                // 在这里进行UI操作，将结果显示到界面上
+                responseText.setText(response);//布局中的一个TextView
+            }
+        });
+    }
+
+	如果需要提交数据给服务器
+	connection.setRequestMethod("POST");
+	DataOutputStream out=new DataOutputStream(connection.getOutputStream());
+	out.writeBytes("username=admin&password=123");
+
+
+使用开源网络库OkHttp
+添加依赖
+	在app/build.gradle文件的depandencies中添加
+	compile 'com.squareup.okhttp3:okhttp:3.4.1'
+
+	new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    OkHttpClient client = new OkHttpClient();
+                    Request request = new Request.Builder()
+                            // 指定访问的服务器地址是电脑本机
+                            .url("http://10.0.2.2/get_data.json")
+                            .build();
+                    Response response = client.newCall(request).execute();
+                    String responseData = response.body().string();
+		    showResponse(response.toString());//显示返回信息（自定义的方法）
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+
+
+解析XML数据
+	
+PULL解析
+	在接收到返回数据后
+	parseXMLWithPull(responseData);//自定义的方法
+	
+	private void parseXMLWithPull(String xmlData) {
+        try {
+            XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
+            XmlPullParser xmlPullParser = factory.newPullParser();
+            xmlPullParser.setInput(new StringReader(xmlData));
+            int eventType = xmlPullParser.getEventType();
+            String id = "";
+            String name = "";
+            String version = "";
+            while (eventType != XmlPullParser.END_DOCUMENT) {
+                String nodeName = xmlPullParser.getName();
+                switch (eventType) {
+                    // 开始解析某个结点
+                    case XmlPullParser.START_TAG: {
+                        if ("id".equals(nodeName)) {
+                            id = xmlPullParser.nextText();
+                        } else if ("name".equals(nodeName)) {
+                            name = xmlPullParser.nextText();
+                        } else if ("version".equals(nodeName)) {
+                            version = xmlPullParser.nextText();
+                        }
+                        break;
+                    }
+                    // 完成解析某个结点
+                    case XmlPullParser.END_TAG: {
+                        if ("app".equals(nodeName)) {
+                            Log.d("MainActivity", "id is " + id);
+                            Log.d("MainActivity", "name is " + name);
+                            Log.d("MainActivity", "version is " + version);
+                        }
+                        break;
+                    }
+                    default:
+                        break;
+                }
+                eventType = xmlPullParser.next();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+SAX解析（兴建一个类继承自DefaultHandler）
+	public class ContentHandler extends DefaultHandler {
+
+    private String nodeName;
+
+    private StringBuilder id;
+
+    private StringBuilder name;
+
+    private StringBuilder version;
+
+    @Override//开始XML解析时调用
+    public void startDocument() throws SAXException {
+        id = new StringBuilder();
+        name = new StringBuilder();
+        version = new StringBuilder();
+    }
+
+    @Override////开始解析某个节点时调用
+    public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+        // 记录当前结点名
+        nodeName = localName;
+    }
+
+    @Override//获取节点内容时调用
+    public void characters(char[] ch, int start, int length) throws SAXException {
+        // 根据当前的结点名判断将内容添加到哪一个StringBuilder对象中
+        if ("id".equals(nodeName)) {
+            id.append(ch, start, length);
+        } else if ("name".equals(nodeName)) {
+            name.append(ch, start, length);
+        } else if ("version".equals(nodeName)) {
+            version.append(ch, start, length);
+        }
+    }
+
+    @Override//完成解析某个节点时调用
+    public void endElement(String uri, String localName, String qName) throws SAXException {
+        if ("app".equals(localName)) {
+            Log.d("ContentHandler", "id is " + id.toString().trim());
+            Log.d("ContentHandler", "name is " + name.toString().trim());
+            Log.d("ContentHandler", "version is " + version.toString().trim());
+            // 最后要将StringBuilder清空掉
+            id.setLength(0);
+            name.setLength(0);
+            version.setLength(0);
+        }
+    }
+
+    @Override//完成XML解析时调用
+    public void endDocument() throws SAXException {
+        super.endDocument();
+    }
+
+}
+	获取数据后
+	parseXMLWithSAX(responseData);//自定义函数
+	
+	private void parseXMLWithSAX(String xmlData) {
+        try {
+            SAXParserFactory factory = SAXParserFactory.newInstance();
+            XMLReader xmlReader = factory.newSAXParser().getXMLReader();
+            ContentHandler handler = new ContentHandler();
+            // 将ContentHandler的实例设置到XMLReader中
+            xmlReader.setContentHandler(handler);
+            // 开始执行解析
+            xmlReader.parse(new InputSource(new StringReader(xmlData)));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+解析JSON数据
+
+使用JSONObject
+	获取数据后
+	parseJSONWithJSONObject(responseData);//自定义函数
+	
+	private void parseJSONWithJSONObject(String jsonData) {
+        try {
+            JSONArray jsonArray = new JSONArray(jsonData);
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONObject jsonObject = jsonArray.getJSONObject(i);
+                String id = jsonObject.getString("id");
+                String name = jsonObject.getString("name");
+                String version = jsonObject.getString("version");
+                Log.d("MainActivity", "id is " + id);
+                Log.d("MainActivity", "name is " + name);
+                Log.d("MainActivity", "version is " + version);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+使用GSON
+	添加依赖
+	在app/build.gradle文件的depandencies中添加
+	compile 'com.google.code.gson:gson:2.7'
+
+	获取数据后
+	parseJSONWithGSON(responseData);//自定义函数
+
+	private void parseJSONWithGSON(String jsonData) {
+        Gson gson = new Gson();
+	//需要创建App类，相应字段和set/get方法
+        List<App> appList = gson.fromJson(jsonData, new TypeToken<List<App>>() {}.getType());
+        for (App app : appList) {
+            Log.d("MainActivity", "id is " + app.getId());
+            Log.d("MainActivity", "name is " + app.getName());
+            Log.d("MainActivity", "version is " + app.getVersion());
+        }
+    }
+

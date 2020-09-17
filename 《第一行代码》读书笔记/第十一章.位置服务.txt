@@ -1,0 +1,188 @@
+利用百度api定位
+	在AndroidManifest.xml中<application>
+	<meta-data
+            android:name="com.baidu.lbsapi.API_KEY"
+            android:value="aTanXhyTXloqRKHhyq7jBNQOwQxGScm4" />//api key
+	<service android:name="com.baidu.location.f" android:enabled="true" android:process=":remote">
+        </service>
+	
+	需要申请的权限
+	<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    	<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    	<uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    	<uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
+    	<uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+    	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    	<uses-permission android:name="android.permission.INTERNET"/>
+    	<uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS"/>
+    	<uses-permission android:name="android.permission.WAKE_LOCK"/>
+
+	一次申请多个权限
+	List<String> permissionList = new ArrayList<>();
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            permissionList.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        }
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+            permissionList.add(Manifest.permission.READ_PHONE_STATE);
+        }
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            permissionList.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        }
+        if (!permissionList.isEmpty()) {
+            String [] permissions = permissionList.toArray(new String[permissionList.size()]);
+            ActivityCompat.requestPermissions(MainActivity.this, permissions, 1);
+        } else {
+            requestLocation();//自定义函数
+        }
+	
+	申请权限的回调函数
+	@Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        switch (requestCode) {
+            case 1:
+                if (grantResults.length > 0) {
+                    for (int result : grantResults) {
+                        if (result != PackageManager.PERMISSION_GRANTED) {
+                            Toast.makeText(this, "必须同意所有权限才能使用本程序", Toast.LENGTH_SHORT).show();
+                            finish();
+                            return;
+                        }
+                    }
+                    requestLocation();
+                } else {
+                    Toast.makeText(this, "发生未知错误", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+                break;
+            default:
+        }
+    }
+
+	使用api
+	在onCrate函数中
+	public LocationClient mLocationClient;
+	mLocationClient = new LocationClient(getApplicationContext());
+        mLocationClient.registerLocationListener(new MyLocationListener());//MyLocationListener()自定义函数
+        
+
+	private void requestLocation() {
+        	mLocationClient.start();//会回调前面的MyLocationListener
+    	}
+
+	自定义类MyLocationListener（mLocationClient.start();或者间隔时间就会调用这个类）
+	public class MyLocationListener implements BDLocationListener {
+
+        @Override
+        public void onReceiveLocation(BDLocation location) {
+            StringBuilder currentPosition = new StringBuilder();
+            currentPosition.append("纬度：").append(location.getLatitude()).append("\n");
+            currentPosition.append("经线：").append(location.getLongitude()).append("\n");
+            currentPosition.append("国家：").append(location.getCountry()).append("\n");
+            currentPosition.append("省：").append(location.getProvince()).append("\n");
+            currentPosition.append("市：").append(location.getCity()).append("\n");
+            currentPosition.append("区：").append(location.getDistrict()).append("\n");
+            currentPosition.append("街道：").append(location.getStreet()).append("\n");
+            currentPosition.append("定位方式：");
+            if (location.getLocType() == BDLocation.TypeGpsLocation) {
+                currentPosition.append("GPS");
+            } else if (location.getLocType() == BDLocation.TypeNetWorkLocation) {
+                currentPosition.append("网络");
+            }
+            positionText.setText(currentPosition);
+        }
+
+    }
+
+
+自动间隔时间定位
+	在onCrate
+	private void requestLocation() {
+        	initLocation();
+        	mLocationClient.start();
+    	}
+	private void initLocation(){
+        	LocationClientOption option = new LocationClientOption();
+        	option.setScanSpan(5000);//间隔5秒
+        	option.setIsNeedAddress(true);//表示需要获取详细的地址信息（街道。。。）
+       		mLocationClient.setLocOption(option);
+    	}
+	要在onDestroy中停止
+	mLocationClient.stop();
+
+
+
+LBS SDK定位模式指定
+	Hight_Accuracy高精度模式（优先使用GPS）
+	Battery_Saving节电模式（只使用网络定位）
+	Device_Sensors传感器模式（只使用GPS）
+
+修改定位模式
+	在initLocation函数中
+	option.setLocationMode(LocationClientOption.LocationMode.Device_Sensors);
+
+
+显示出百度地图
+	使用lbs提供的控件
+	<com.baidu.mapapi.map.MapView
+        	android:id="@+id/bmapView"
+        	android:layout_width="match_parent"
+        	android:layout_height="match_parent"
+        	android:clickable="true" />
+	在活动中
+	public MapView MapView=findViewById(R.id.mapview);
+
+	mLocationClient = new LocationClient(getApplicationContext());
+        mLocationClient.registerLocationListener(new MyLocationListener());//MyLocationListener()自定义函数
+        SDKInitializer.initialize(getApplicationContext());//初始化要在setContentView()之前
+
+	@Override
+        protected void onResume() {
+            super.onResume();
+            mapView.onResume();
+        }
+    
+        @Override
+        protected void onPause() {
+            super.onPause();
+            mapView.onPause();
+        }
+    
+        @Override
+        protected void onDestroy() {
+            super.onDestroy();
+            mLocationClient.stop();
+            mapView.onDestroy();
+        }
+
+
+
+控制地图
+	百度LBS提供的BaiduMap类是地图总控制器
+	BaiduMap baiduMap=mapView.getMap();
+	利用BaiduMap控制地图
+	缩放级别在3-19可以小数
+	缩放地图
+	MapStatusUpdate update = MapStatusUpdateFactory.zoomTo(16f);
+        baiduMap.animateMapStatus(update);
+
+	移动地图到某个经纬度
+	LatLng ll = new LatLng(39.6, 27.8);//填入经纬度
+        MapStatusUpdate update = MapStatusUpdateFactory.newLatLng(ll);
+	baiduMap.animateMapStatus(update);
+
+	
+	在地图上显示我的位置
+	开启功能
+		baiduMap.setMyLocationEnabled(true);
+	在onDestroy()中关闭功能
+		baiduMap.setMyLocationEnabled(false);
+	
+	MyLocationData.Builder locationBuilder = new MyLocationData.Builder();
+        locationBuilder.latitude(39.6);//经度
+        locationBuilder.longitude(27.8);//纬度
+        MyLocationData locationData = locationBuilder.build();
+        baiduMap.setMyLocationData(locationData);
+
+
+

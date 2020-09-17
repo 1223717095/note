@@ -1,0 +1,174 @@
+配置数据源
+	在Spring中配置数据源的方式
+		通过JDBC驱动程序定义的数据源
+		通过JNDI查找数据源
+		连接池的数据源
+		
+		
+		
+		配置JDNI数据源（在Spring上下文配置为bean）
+			在xml中
+				<jee:jndi-lookup id="dataSource"
+					jndi-name="/jdbc/SpitterDS"//指定jdni中的资源名称
+					resource-ref="true"/>//为jdni-name添加"java:comp/env/"前缀
+			在javaConfig中
+				@Bean
+				public JndiObjectFactoryBean dataSource(){
+					JndiObjectFactoryBean jndiObjectFB=new JndiObjectFactoryBean();
+					jndiObjectFB.setJndiName("/jdbc/SpitterDS");
+					jndiObjectFB.setResourceRef(true);
+					jndiObjectFB.setProxyInterface(javax.sql.DataSource.class);
+					return jndiObjectFB;
+		
+		配置连接池的数据源
+			在xml中
+				<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSoure"
+				p:driverClassName="org.h2.Driver"
+				p:url="jdbc:h2:tcp://localhost/~/spitter"
+				p:username="w"
+				p:password=""
+				p:initialSize="5"//池启动时创建的连接数量
+				p:maxActive="10"/>//同一时间内可从池中分配的最大连接数
+			在javaConfig中
+				@Bean
+				public BasicDataSoure dataSource(){
+					BasicDataSoure ds=new BasicDataSoure();
+					ds.setDriverClassName("org.h2.Driver");
+					ds.setUrl("jdbc:h2:tcp://localhost/~/spitter");
+					ds.setUsername("w");
+					ds.setPassword("");
+					ds.setInitialSize("5");//池启动时创建的连接数量
+					ds.setMaxActive("10");//同一时间内可从池中分配的最大连接数
+				}
+				
+		配置JDBC驱动的数据源（没有池管理不推荐）
+			在xml中
+				<bean id="dataSource" class="org.springframework.jdbc.dataSource.DriverManageDataSource"
+				p:driverClassName="org.h2.Driver"
+				p:url="jdbc:h2:tcp://localhost/~/spitter"
+				p:username="w"
+				p:password=""/>//同一时间内可从池中分配的最大连接数
+			在javaConfig中
+				@Bean
+				public BasicDataSoure dataSource(){
+					DriverManageDataSource ds=new DriverManageDataSource();
+					ds.setDriverClassName("org.h2.Driver");
+					ds.setUrl("jdbc:h2:tcp://localhost/~/spitter");
+					ds.setUsername("w");
+					ds.setPassword("");
+				}
+				
+		配置嵌入式数据源（推荐用于测试）
+			在xml中
+				使用jdbc命名空间
+					xmlns:jdbc="http://www.springframework.schema/jdbc"
+					在xsi中添加
+						http://www.springframework.schema/jdbc
+						http://www.springframework.schema/jdbc/spring-jdbc-3.1.xsd
+				<jdbc:embedded-database id="dataSource" type="H2">
+					<jdbc:/script location="com/habuma/.../a.sql">//包含数据库创建语句
+					<jdbc:/script location="/.../b.sql">//填充数据
+				</jdbc:embedded-database>
+			在javaConfig中
+				@Bean
+				public DataSource dataSource(){
+					return new EmbeddedDatabaseBuilder()
+					.setType(EmbeddedDatabaseType.H2)
+					.addScript("classpath:a.sql")
+					.addScript("classpath:b.sql")
+					.bulid();
+				}	
+				
+
+使用profile选择数据源
+
+使用JDBC模板
+	spring为JDBC提供了3个模板类
+		JdbcTemplate最基本的jdbc模板
+		NamedParameterJdbcTemplate执行查询时可以将值以命名参数的形式绑定到sql中（插入数据时不用按顺序排列参数）
+		
+	配置JdbcTemplate
+	创建一个配置类@Configuration添加这个bean和上面的数据源在根上下文import
+	@Bean
+	public JdbcTemplate jdbcTemplate(DataSource dataSource){//注入数据源
+		return new JdbcTemplate(dataSource);
+	}
+	创建一个新的类
+	@Repository//会在组件扫描时自动创建
+	public class JdbcSpitterRepository implements SpitterRepository {
+	
+		private JdbcOperations jdbcOperations;
+		@Inject//注入
+		public JdbcSpitterRepository(JdbcOperations jdbcOperations) {//JdbcOperations为JdbcTemplate的父接口
+			this.jdbcOperations = jdbcOperations;		
+		}
+	}
+	在JdbcSpitterRepository中（映射查询到的数据）
+		private static final class SpitterRowMapper implements RowMapper<Spitter> {
+			public Spitter mapRow(ResultSet rs, int rowNum) throws SQLException {
+				long id = rs.getLong("id");
+				String username = rs.getString("username");
+				String password = rs.getString("password");
+				String fullName = rs.getString("fullname");
+				String email = rs.getString("email");
+				boolean updateByEmail = rs.getBoolean("updateByEmail");
+				return new Spitter(id, username, password, fullName, email, updateByEmail);
+			}
+		}
+	插入数据（将方法添加到JdbcSpitterRepository（自定义）类）
+		public Spitter save(Spitter spitter) {
+			jdbcOperations.update("sql语句用？填充",//例如"insert into a values (?,?,?)"				
+					spitter.getUsername(),
+					spitter.getPassword(),
+					spitter.getFullName(),
+					spitter.getEmail(),
+					spitter.isUpdateByEmail(),
+					id);
+			return spitter;
+		}
+		
+	查询数据
+		//查询一条
+		public Spitter findOne(long id) {
+			return jdbcOperations.queryForObject(
+					SELECT_SPITTER + " where id=?", new SpitterRowMapper(), id);
+		  }
+		//查询多条
+		public List<Spitter> findAll() {
+			return jdbcOperations.query("select id, username, password, fullname, email, updateByEmail from Spitter order by id", new SpitterRowMapper());
+		}
+		private static final class SpitterRowMapper implements RowMapper<Spitter> {
+			public Spitter mapRow(ResultSet rs, int rowNum) throws SQLException {
+				long id = rs.getLong("id");
+				String username = rs.getString("username");
+				String password = rs.getString("password");
+				String fullName = rs.getString("fullname");
+				String email = rs.getString("email");
+				boolean updateByEmail = rs.getBoolean("updateByEmail");
+				return new Spitter(id, username, password, fullName, email, updateByEmail);
+			}		
+		}
+		
+	NamedParameterJdbcTemplate使用命名参数
+		Spring上下文改为
+			@Bean
+			public NamedParameterJdbcTemplate namedParameterJdbcTemplate(DataSource dataSource){//注入数据源
+				return new NamedParameterJdbcTemplate(dataSource);
+			}
+
+		sql语句改为"insert into a values (:a,:b,:c)"	
+		将参数和值填充为HashMap<StringObject>
+		jdbcOperations.update("sql",map);
+		
+		
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				

@@ -1,0 +1,135 @@
+profile设置什么环境启动什么bean
+
+javaConfig中配置profile
+	@Profile("dev")设置环境为dev时启动bean
+	//注解在配置类前时这个配置类的全部bean都在相同的环境下启动
+	//注解在配置类中的方法前时为每个bean配置不同的启动环境
+
+在xml中配置profile
+	<beans profile="dev">
+	可以在beans中嵌套beans
+	
+激活profile（设置当前profile）
+	通过设置
+		spring.profiles.active//当前环境
+		spring.profiles.dafaule//默认值，如果设置了active则这个值无效
+	设置这两个值的方法
+		作为DispatcherServlet的初始化参数
+		作为web应用的上下文
+		作为JNDI条目
+		作为环境变量
+		作为JVM系统属性
+		在测试类上使用@ActiveProfiles()注解
+	
+	在web应用的web.xml配置当前profiles
+		为上下文设置
+		<context-param>
+			<param-name>spring.profiles.active</param-name>
+			<param-value>dev</param-value>
+		</context-param>
+		为servlet设置 在<servlet>中
+		<init-param>
+			<param-name>spring.profiles.active</param-name>
+			<param-value>dev</param-value>
+		</init-param>
+		
+		
+根据条件决定是否创建bean
+	在bean注解的前或后添加@Conditional(a.class)
+	
+	
+	
+处理自动装配时的歧义性
+	设置首选bean
+		在创建bean时添加@Primary注解
+		xml中<bean id="" class="" primary="true">
+		
+	限制注入的bean
+		在构造方法或setter方法上添加
+		@Qualifier("bean的id")表明要注入的bean
+		
+	
+	每个bean都有默认的限定符
+		默认为和id一样
+		
+	自定义限定符
+		@Qualifier("cold")//这个类的限定符为cold，在其他需要注入这个类时@Qualifier("cold")
+		
+	自定义限定符注解
+		@Target({ElementType.CONSTRUCTOR,ElementType.FIELD,ElementType.METHOD,ElementType.TYPE})
+		@Retention(RetentionPolicy.RUNTIME)
+		@Qualifier
+		public @interface Cold{}//创建了一个名为cold的限定符注解
+		使用时@Cold
+		
+		
+		
+bean作用域
+	单例Singleton//bean只有一个实例
+	原型Prototype//每次注入或通过Spring上下文获取时创建新的实例
+	会话session//web，为每个会话创建一个bean实例
+	请求Rquest//web，为每个请求创建一个bean实例
+	
+	声明作用域//在@bean前后
+		@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+		在xml中
+		<bean id="" class="" scope="prototype">
+	
+	在会话和请求作用域
+		@Scope(value=WebApplicationContext.SCOPE_SESSION
+			proxyMode=ScopedProxyMode.INTERFACES)//作用域代理
+		在xml中声明作用域代理
+			<bean id="" class="" scope="session">
+				<aop:scoped-proxy/>//添加proxy-target-class="false"生成基于接口的代理
+			</bean>
+			
+			
+运行时值的注入
+	在配置类前声明属性源
+		@PropertySource("classpath:/com/a")
+	在配置类中添加
+		@Autoeired
+		Environment env;	
+	在需要注入的bean中
+		env.getProperty("a")
+		getProperty方法重载
+		String getProperty(String key)
+		String getProperty(String key,String defaultValue)
+		String getProperty(String key,Class<T> type)//可以填Integer.class
+		String getProperty(String key,Class<T> type,T defaultValue)
+		getProperty方法如果源文件没有的话返回默认值或null
+			getRequiredProperty如果没有报错
+		
+		判断属性是否存在
+			boolean env.containsProperty("key")
+		将属性解析为类
+			getPropertyAsClass("key",a.class)
+		检查profile状态
+			String[] getActiveProfiles()//返回激活profiles名称数组
+			String[] getDefaultProfiles()//返回默认profiles名称数组
+			boolean acceptsProfiles(String...profiles)//如果支持给定的profiles返回true
+		
+		
+		
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	

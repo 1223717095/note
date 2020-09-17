@@ -1,0 +1,20 @@
+Service层
+	/java/com.seckil/service包
+	service接口
+	impl包，service接口实现
+	
+	dto包
+		接口需要返回多个数值时封装为dto
+	enums包
+		枚举类
+		封装多个状态，state和stateInfo
+	exception
+		继承RunTimeException
+		自定义异常
+	
+	
+	配置spring-service.xml
+	
+	配置Logback
+		/resource/logback.xml
+	

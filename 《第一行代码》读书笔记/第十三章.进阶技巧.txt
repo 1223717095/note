@@ -1,0 +1,149 @@
+全局获取Context的技巧
+	Activity就是一个Context对象
+	全局获取方法
+	自定义一个MyApplication类继承自Application
+	public class MyApplication extendsApplication{
+		private static Context context;
+		@Override
+		public void onCreate(){
+			context=getApplicationContext();
+		}
+		public static Context getContext(){
+			return context;
+		}
+	}
+	使程序初始化MyApplication而不是Application
+	在AndroidManifest.xml的<application android:name="com.example.text.Myapplication">
+	之后不管在哪里都能用MyApplication.getContext()获取context
+
+	6.5小结中的配置Litepal改成在MyApplication的onCreate中配置
+	Lite.initialize(context);
+
+
+
+
+利用Intent传递数据
+	Intent可以用于启动活动，发送广播，启动服务，等
+	传递基本数据类型的数据一般用
+		intent.putExtra("key","value");
+		取出数据intent.getString("key");
+	传递自定义对象一般用Serialization和Parcelable
+		
+
+	Serialization(对对象进行序列化)
+	将需要传输的类实现Serialzation接口
+		例如Person类实现了Serialzation接口
+		intent.putExtra("key",person);
+		取出数据Person person=(Person)intent.getSerializationExtra("key");
+
+	
+	Parcelable（对对象进行分解）
+	将需要传输的类实现Parceable接口（注意读出和写入的顺序一定要一样）
+	public class Person implements Parcelable{
+		private String name;
+		private int age;
+	@Override
+	public int describeContents(){
+		return 0;
+	}
+	@Override
+	public void writeToParcel(Parcle dast,int flags){
+		dest.writeSting(name);//写出
+		dest.writeint(age);//写出
+	}
+	public static final Parcelable.Creator<Person> CREATOR = new Parcelable.Creator<Person>(){
+		@Override
+		public Person createFromParcel(Parcel source){
+			Person person = new Person;
+			person.name=source.readString();//读取name
+			person.age=source.readString();//读取age
+			return person;
+		}	
+		@Override
+		public Person[] newArray(int size){
+			return new Person[size];
+		}
+	}
+	
+	intent.putExtra("key",person);
+	取出数据Person person=(Person)intent.getParcelableExtra("key");
+
+
+
+
+自定义日志工具（实现控制打印输出的级别）
+	public class LogUtil{
+		public static final int VERBOSE=1;
+		public static final int DEBUG=2;
+		public static final int INFO=3;
+		public static final int WARN=4;
+		public static final int ERROR=5;
+		public static final int NOTHING=6;//全不打印
+		public static final int level=VERBOSE;//控制打印级别只需要修改这个
+		
+		public static void d(String tag,String msg){
+			if(level<=VERBOSE){
+				Log.v(tag,msg);
+			}
+		}
+		public static void d(String tag,String msg){
+			if(level<=DEBUG){
+				Log.d(tag,msg);
+			}
+		}
+		public static void d(String tag,String msg){
+			if(level<=INFO){
+				Log.i(tag,msg);
+			}
+		}
+		public static void d(String tag,String msg){
+			if(level<=WARN){
+				Log.w(tag,msg);
+			}
+		}
+		public static void d(String tag,String msg){
+			if(level<=ERROR){
+				Log.e(tag,msg);
+			}
+		}
+	}	
+
+	
+
+定时任务
+	2种实现方式
+		java Api中的Timer类
+		Android中的Alarm（推荐这种）
+
+
+	Alarm
+	AlarmManager manager =(AlarmManager) getSystemService(Context.ALARM_SERVICE);//获取AlarmManager
+	long triggerAtTime=SystemClock.elapsedRealtime()+10*1000;//SystemClock.elapsedRealtime()开机至今的毫秒数
+	manager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP,triggerAtTime,pendingIntent);//因为优化的原因延迟会不准确，如果需要准确使用setExact()代替set()
+		第一个参数起始时间
+			AlarmManager.ELAPSED_REALTIME_WAKEUP//从系统开机算起，唤醒CPU
+			AlarmManager.ELAPSED_REALTIME//从系统开机算起，不唤醒CPU
+			AlarmManager.RTC_WAKEUP//从1970/1/1 0点算起，唤醒CPU
+			AlarmManager.RTC//从1970/1/1 0点算起，不唤醒CPU
+		第二个参数
+			延迟时间
+		第三个参数	
+			一般用PendingIntent.getService(this,0,intent,0)或getBroaedcast()
+
+
+
+
+多窗口模式Android7.0后支持
+	开启多窗口或改变横竖屏都会重新创建活动
+		关闭重新创建活动在AndroidManifest.xml中的<application>添加
+			android:configChanges="orientation|keyboardHidden|screenSize|screenLayout"
+		关闭之后屏幕发生变化会会调用到Activity的onConfigurationChanged()
+	禁用多窗口模式
+		在AndroidManifest.xml中的<application>添加
+			android:resizeableActivity="false"//默认为true
+	关闭横竖屏切换
+		在AndroidManifest.xml中的<application>添加
+			android:screenOrientation=""//landscape只支持横屏portrait只支持竖屏
+
+
+

@@ -1,0 +1,102 @@
+Redis数据结构
+	1.STRING（字符串）
+	2.LIST（列表）
+	3.SET（集合）
+	4.HASH（散列表）
+	5.ZSET（有序集合）
+	//所有数据结构都类似于键值对
+	
+STRING（字符串）
+	set hello world //将建为hello的值设为world
+	get hello
+	del hello
+	
+LIST（列表）
+	rpush list-key item [1,2,3]   //从右边向键名为list-key的列表存入一个值
+	lpush list-key item1 [1,2,3]  //从左。。。。
+	
+	lrange list-key 0 -1   //获取给定范围的所有值  0 -1为全部
+	lindex list-key 1      //获取索引给定的值
+	
+	lpop list-key          //从左边抛出值
+	rpop list-key          //从右。。。。
+	
+	ltrim key start end    //修剪列表，保留从start到end的值（包括start和end）
+	
+SET（集合）
+	//通过散列表确保不重复
+	sadd set-key item   //重复会返回0
+	
+	smember set-key     //返回全部值
+	
+	sismember set-key item  //检查是否存在给定元素，有返回1
+	
+	srem set-key item        //如果有这个元素则移除，移除返回1
+	
+	scard key              //返回元素数量
+	
+	srandmember key [count]  //随机返回count个元素，count为负值时可能会出现重复
+	
+	spop key              //随机移除一个元素并返回这个元素
+	
+	smove set1 set2 item   //如果set1中有item则移动到set2，并返回1
+	
+	
+	
+HASH（散列表）
+	hset hash-key a b
+	hget
+	hdel hash-key key [key1,key2]
+	hgetall hash-key
+	
+	hmget hash-key key [key1,key2] //获取一个或多个值
+	
+	hmset hash-key key value [key1 vale]  //设置多个值
+	
+	hlen  hash-key   //返回键值对数量
+	
+	
+	
+	
+	
+ZSET（有序集合）
+		//类似于散列表由于存储键值对
+		//成员值为分值，分值必须为浮点数
+		zadd zset-key 1 member1
+		
+		zrange zset-key 0 -1             //获取给定位置范围的所有值  0 -1为全部
+		
+		zrangebyscore zset-key 1 2       //获取给定分值范围的所有值 
+		
+		zrem zset-key member1            //如果有这个成员，则移除
+		
+		zcard key                        //返回成员数量
+		
+		zincrby key number member         //将成员member的分值加上number
+		
+		zcount key min max                //返回分值介于min和max中间的数量 
+		
+		zrank key member                //返回成员member的排名
+		
+		zscore key menber                //返回member分值
+		
+		
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	

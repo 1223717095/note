@@ -1,0 +1,50 @@
+mkdir创建文件夹
+cd进入
+cat text.txt 查看文件内容
+rm text.txt删除
+
+创建ssh key
+	看看在用户主目录下有没有.ssh文件id_rsa.pub就是公匙
+	没有的话创建
+		ssh-keygen -t rsa -C "youremail@example.com"
+创建，添加
+	git init创建仓库
+
+	git add <file> 添加文件
+
+	git commit -m "本次提交的提示"  提交到仓库
+	
+
+查看仓库
+	git status  当前仓库状态
+
+	dit diff 查看不同
+
+	git log 显示提交日志
+
+	git log --pretty=oneline只显示版本号和修改提示
+
+回退版本
+	git reset --hard HEAD^返回到上一个版本HEAD^^上上个版本HEAD~100前100个版本，或者填版本号
+	git reflog查看历史命令
+
+撤销修改（没有commit）
+	git checkout -- file让文件回到最近的一次add或commit
+	如果已经add  git reset HEAD readme.txt
+
+删除文件
+	git rm text.txt
+	git commit -m ""
+
+关联远程github
+	git remote add origin https://github.com/1223717095/text.git
+	推送到远程仓库git push -u origin master 第一次加-u
+从远程仓库克隆
+	git clone git@github.com:1223717095/gitskills.git
+
+取消关联
+	git remote remove origin
+
+
+	
+	

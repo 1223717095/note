@@ -1,0 +1,11 @@
+创建并切换分支
+	git checkout -b dev
+
+查看全部分支
+	git branch
+
+合并分支
+	git merge dev
+
+删除分支
+	git branch -d dev

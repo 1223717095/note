@@ -1,0 +1,156 @@
+有2个应用上下文
+	一个是DispatcherServlet创建的一个是ContextLoaderListener创建的
+	其实AbstractAnnotationConfigDispatcherServletInitializer会同时创建这2个
+	
+配置DispatcherServlet(前端控制器，所有请求先经过他)
+	public class SpitterWebInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
+	//扩展AbstractAnnotationConfigDispatcherServletInitializer这个类会自动配置DispatcherServlet和Spring的应用程序上下文
+	  @Override
+	  protected Class<?>[] getRootConfigClasses() {//创建根应用上下文
+		return new Class<?>[] { RootConfig.class };//这个配置类中的bean用于创建根应用上下文
+	  }
+
+	  @Override
+	  protected Class<?>[] getServletConfigClasses() {//创建web应用上下文
+		return new Class<?>[] { WebConfig.class };//这个配置类中的bean用于创建web应用上下文
+	  }
+
+	  @Override
+	  protected String[] getServletMappings() {//将DispatcherServlet映射到路径“/”
+		return new String[] { "/" };
+	  }
+
+	}
+	
+在web配置类中启动Spring MVC
+	@Configuration
+	@EnableWebMvc   //启动Spring MVC
+	@ComponentScan("spittr.web")//启动组件扫描
+	//@ImportResource("classpath:spring/*.xml")//扫描xml里面注册的bean
+	public class WebConfig extends WebMvcConfigurerAdapter {
+
+	  @Bean
+	  public ViewResolver viewResolver() { //配置JSP视图解析器
+		InternalResourceViewResolver resolver = new InternalResourceViewResolver();
+		resolver.setPrefix("/WEB-INF/views/");
+		resolver.setSuffix(".jsp");
+		return resolver;
+	  }
+	  
+	  @Override
+	  public void configureDefaultServletHandling(DefaultServletHandlerConfigurer configurer) {//配置静态资源处理
+		configurer.enable();//转移到默认的Servlet而不是DispatcherServlet处理
+	  }
+	  
+	  @Override
+	  public void addResourceHandlers(ResourceHandlerRegistry registry) {
+		// TODO Auto-generated method stub
+		super.addResourceHandlers(registry);
+	  }
+
+	}
+
+	
+根配置类
+	@Configuration
+	@Import(DataConfig.class)
+	@ComponentScan(basePackages={"spittr"}, 
+		excludeFilters={//指定不扫描的组件
+			@Filter(type=FilterType.CUSTOM, value=WebPackage.class)
+		})
+	public class RootConfig {
+	  public static class WebPackage extends RegexPatternTypeFilter {
+		public WebPackage() {
+		  super(Pattern.compile("spittr\\.web"));
+		}    
+	  }
+	}
+	
+	
+控制器
+	@Controller//声明为一个控制器，会自动装配为bean
+	@RequestMapping(value="/", method=RequestMethod.GET)//多个路径{"/","/a"}
+	public class HomeController {
+	  @RequestMapping(method=RequestMethod.GET)
+	  public String home(Model model) {
+		return "home";//返回视图名称，进入DispatcherServlet中的视图名称解析器
+	  }
+
+	}
+	
+	
+测试控制器（使用mockSpringMVC不用启动web服务器以及web浏览器）
+	public class HomeControllerTest {
+	  @Test
+	  public void testHomePage() throws Exception {
+		HomeController controller = new HomeController();
+		MockMvc mockMvc = standaloneSetup(controller).build();//搭建mockMvc
+		mockMvc.perform(get("/"))                             //对路径“/”发起get请求
+			   .andExpect(view().name("home"));               //断言得到的视图名称为home
+	  }
+
+	}
+
+	
+传递模型数据到视图（在控制器中将数据添加到模型）
+	控制器类中的方法
+	public String spittle(Model model){//添加model参数
+    model.addAttribute("key",value));
+    return "spittle";
+  }
+	
+	
+接受请求数据
+	查询数据//在url后面添加?a=1&b=2
+	表单参数
+	路径变量//直接在url后面加/111
+
+控制器接受参数
+	请求参数
+	在控制器方法参数中添加
+	@RequestParam(value="max", defaultValue=MAX_LONG_AS_STRING) long max//max为参数名
+	
+	路径参数
+	@RequestMapping(value="/{spittleId}", method=RequestMethod.GET)
+    在控制器方法参数中添加@PathVariable("spittleId") long spittleId, 
+	
+	表单参数
+	创建一个包含全部表单数据的POJO类
+	在控制器方法参数中写Class class
+	
+	
+	
+如果jsp使用JSTL标签来处理格式化信息
+		需要在视图解析器中
+		resolver.setViewClass(org.springframework.web.servlet.view.JstView);
+	
+	
+在控制器中实现重定向(redirect)和服务器内转发(forword)
+	在控制器方法中
+	return "redirect:/spitter/register";//重定向到/spitter/register浏览器地址栏会改变
+	return "forward:/spitter/register";//服务器内转发到/spitter/register浏览器地址栏不会改变
+	
+	
+校验注解
+	写在POJO类的属性上
+	@AssertFalse//必须为boolean且为false
+	@AssertTrue//必须为boolean且为True
+	@DecimalMax(value=1)//必须为数字且小于value
+	@DecimalMin(value=1)//必须为数字且大于value
+	@Digite//必须为数字且有指定的位数
+	@Future//必须是一个将来的日期
+	@Max(value=8)////必须为数字且小于value
+	@Min(value=8)////必须为数字且大于value
+	@NotNull//不为null
+	@Null//必须为null
+	@Past//必须是一个过去的日期
+	@Pattern//必须匹配给定的正则表达式
+	@Size(min=2,max=30)//非空2-30个字符
+	
+在控制器方法参数添加@Valid Class class,Errors errors校验输入
+	if(errors.hasErrors()){
+		return "redirect";//校验错误
+	}	
+	
+	
+	

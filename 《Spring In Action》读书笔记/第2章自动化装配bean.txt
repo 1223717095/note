@@ -1,0 +1,154 @@
+3种装配方法
+	xml中配置
+	java代码中配置
+	通过注解使Spring自动装配
+
+使用注解装配bean
+
+	创建bean
+		@Component//该类作为注解类并为这个类创建bean
+		@Component("id")//创建bean并命名为id
+		@Named可以代替@Component
+
+
+
+	扫描bean的基础包//加在配置类上
+		@ComponentScan//以配置类所在的包作为基础包来扫描组件
+		@ComponentScan(basePackages={"package1","package2"})//包名作为基础包
+		@ComponentScan(basePackageClasses={a.class,b.class})//这些类或接口所在的包作为基础包
+			//通过创建空的标记接口来使用
+
+	自动装配
+		@Autowired//写在类的构造器或setter方法（其他方法也可以，甚至可以用在类属性上）上
+		//创建实例时用bean匹配参数，参数就是这个类的依赖
+		//如果找不到参数类型对应的bean会报错（@Autowired(required=false)关闭报错)
+		@Inject可以代替@Autowired
+
+
+使用java装配bean
+	创建配置类用@Configuration(proxyTargetClass=true)标注（一般把配置类放在单独的包中）使用CGLIB代理
+
+	声明Bean在配置类的创建一个方法用@Bean注解
+		@Bean(name="beanid")//bean的id默认为bean1(既方法名)
+		public classname1 bean1(){//为类a创建bean
+			return new classname1();
+		}
+	
+	实现注入
+		方法1 通过引用Bean方法名
+		@Bean
+		public classname2 bean2(){//为类a创建bean
+			return new classname2(bean1());//bean1为bean Spring会拦截对他的调用
+			//Spring创建Bean为单例！！！
+		}
+		方法2 通过方法参数//通常使用该方法
+		public classname2 bean2(Class i){//自动装配类名为class的bean
+			return new classname2(i);
+			//classname2 q=new classname2(i);//使用setter方法注入时
+			//q.set(i);
+		}
+	
+
+使用XML装配bean（不推荐使用这种方法）
+	<?xml version="1.0" encoding="UTF-8"?>//最简单的xml配置
+	<beans xmlns="http://www.springframework.org/schema/beans"
+	  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	  xmlns:context="http://www.springframework.org/schema/context"
+	  xmlns:c="http://www.springframework.org/schema/c"
+	  xmlns:p="http://www.springframework.org/schema/p"
+	  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+			http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+	  <!--添加配置-->
+
+	</beans>
+	
+xml构造器注入
+	声明Bean
+	<bean class="包名.类名"/>//默认bean id为“包名.类名#0”
+	
+	指定id
+	<bean id="a" class="包名.类名"/>
+	
+	注入
+	<bean id="b" class="包名.类名">
+		<constructor-arg ref="要注入进来的bean的id"/>  
+	</bean>
+	或者//使用c-命名空间
+	<bean id="b" class="包名.类名"
+		c:cd-ref="要注入进来的bean的id"/> //cd为参数名称，或者使用_0参数索引，只有一个构造器参数直接用_
+	
+	注入字面量
+	<bean id="b" class="包名.类名">
+		<constructor-arg value="qqq"/>//将字面量注入构造器参数
+		<constructor-arg value="bbb"/>
+	</bean>
+	
+	c_命名空间注入字面量
+	<bean id="b" class="包名.类名"
+		c:_title="qqq"/>//title为参数名称，或者使用_0参数索引，只有一个构造器参数直接用_
+		
+	注入null
+	<constructor-arg><null/></constructor-arg>
+	
+	如果构造器有一个List参数
+	<constructor-arg>
+		<List>//set时使用<set>
+			<value>qqq</value>//List为String类型时用value，时一个类时用<ref bean="id"/>
+			<value>bbb</value>
+		</list>
+	</constructor-arg>
+	
+XML中setter方法注入
+	<bean id="b" class="包名.类名">
+		<property name="a" ref="要注入进来id"/>//为这个类的属性a注入（通过seta()方法）
+	</bean>
+	
+	使用p_命名空间
+	<bean id="b" class="包名.类名"
+		p:a-ref="要注入进来id"/>//为这个类的属性a注入（通过seta()方法）
+		
+	不强制要求装配这些属性
+	<bean id="b" class="包名.类名"/>//属性全为null
+	
+	使用字面量或List注入和上面一样constructor改为property
+	
+	
+在javaConfig中引用其他配置
+	@Import(a.class)//引入另一个配置类a
+	@ImportResource("WEB-INF/b.xml")//引入一个xml配置文件
+
+在xml中引用其他配置
+	<import resoune="a.xml">//引入一个xml配置文件
+	<bean class="包名。配置类名">引入另一个配置类
+	
+	
+通常创建一个root配置文件来包含其他配置
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+
+
+
+
+
+
+
+
+
+
+
+

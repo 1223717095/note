@@ -1,0 +1,37 @@
+在Spring中集成Hibernate
+	声明Hibernate的Session工厂
+		LocalSessionFactoryBean//h3且使用xml定义映射关系
+		AnnotationSessionFactoryBean//h3且使用注解定义映射
+		h4.LocalSessionFactoryBean//h4不论是xml还是注解
+			
+			在Spring上下文(3选1)
+				@Bean
+				public LocalSessionFactoryBean sessionFactory(DataSource dataSource){
+					LocalSessionFactoryBean sfb=new LocalSessionFactoryBean();
+					sfb.setDataSource(dataSource);
+					sfb.setMappingResources(new String[] {Spitter.hbm.xml});
+					Properties props=new Properties();
+					props.setProperty("dialect","org.hibernate.dialect.H2Dialect");
+					sfb.setHibernateProperties(props);
+					return sfb;
+				}
+				@Bean
+				public AnnotationSessionFactoryBean sessionFactory(DataSource dataSource){
+					AnnotationSessionFactoryBean sfb=new AnnotationSessionFactoryBean();
+					sfb.setDataSource(dataSource);
+					sfb.setPackagesToScan(new String[] {Spitter.hbm.domain});
+					Properties props=new Properties();
+					props.setProperty("dialect","org.hibernate.dialect.H2Dialect");
+					sfb.setHibernateProperties(props);
+					return sfb;
+				}
+				@Bean
+				public LocalSessionFactoryBean sessionFactory(DataSource dataSource){
+					LocalSessionFactoryBean sfb=new LocalSessionFactoryBean();
+					sfb.setDataSource(dataSource);
+					sfb.setPackagesToScan(new String[] {Spitter.hbm.domain});
+					Properties props=new Properties();
+					props.setProperty("dialect","org.hibernate.dialect.H2Dialect");
+					sfb.setHibernateProperties(props);
+					return sfb;
+				}

@@ -1,0 +1,132 @@
+使用@RequestMapping映射请求(类上的注解添加到方法上的注解上)
+url限制
+	@RequestMapping(value="aaa")
+	如果匹配多个则最具体的映射胜出（/a比/*。、.json具体）
+
+http请求方法限制
+	@RequestMapping(value="aaa",method={RequestMethod.GET,RequestMethod.POST})
+
+请求参数限制(指定1或多个参数表达式，执行结果必须为真)
+	@RequestMapping(params={"employee","confirm=true"})
+	confirm必须存在且为true
+	！=
+	！a必须不存在
+
+请求头限制(与参数限制相同)
+	@RequestMapping(headers={"X-Client=text*"})
+
+匹配headers中的Content-Type
+	@RequestMapping(consumes={"text/json"})
+
+匹配headers中的Accept
+	@RequestMapping(produces={"text"})	
+
+
+Spring为方法提供Servlet Api可以在参数()中指定
+	HttpServletRequest,HttpServletResponse,HttpServlet,InputStream,OutStream
+
+在方法中获取请求参数的注解
+	public String user(@RequestParam("id") long userId,
+			   @RequestParam(value="name",required=false) String name,
+			   @RequestParam(value="key",defaultValue="") String key){}
+	required该请求参数可选
+	defaultValue默认值，可选参数
+
+获取请求头中的值
+	@RequestHeader("Content-Type") String con
+	@RequestHeader Map<String,String> headers (类型可以为MultiValueMap<String,String>或HttpHeaders)
+
+URL中可以包含模板
+	@RequestMapping(value="user/{userId:\\d+}")
+	public void foo(@PathVariable("userId") String userId)
+	有多个时@PathVariable("userId") Map<String,String> variable
+	
+路径参数
+	http://www.baodu.com/43;a=1;b=2/huest
+	在匹配Servlet映射时路径参数ab将移除实际匹配路径为http://www.baodu.com/43/huest
+	提取
+	@MatriVariable("")有value,required,defaultValue参数，参数pathVar("")用于指定引用哪个路径段的路径参数
+
+接收上传的文件
+	@RequestPart("upload") Part upload
+
+
+使用显示的视图和视图名称
+	重定向视图（用于将客户端请求发送到另一个url）
+	@RequestMapping("/")
+    	public View home(Map<String, Object> model)
+    	{
+		model.put("dashboardUrl", "dashboard");
+        	return new RedirectView("/{dashboardUrl}", true);
+    	}
+	@RequestMapping(value = "/dashboard", method = RequestMethod.GET)
+	视图处理函数
+    	public String dashboard(Map<String, Object> model)
+    	{
+        	model.put("text", "This is a model attribute.");
+        	model.put("date", Instant.now());
+		return "home/dashboard";//返回视图名字
+    	}
+	配置视图解析匹配到home.jsp
+	@Bean
+    	public ViewResolver viewResolver()
+    	{
+     	   InternalResourceViewResolver resolver =
+      	          new InternalResourceViewResolver();
+       	  resolver.setViewClass(JstlView.class);
+      	  resolver.setPrefix("/WEB-INF/jsp/view/");
+       	  resolver.setSuffix(".jsp");
+          return resolver;
+    	}
+
+	
+使用隐式视图（使用访问的url确定视图名字）
+	配置视图名称转换
+	@Bean
+    	public RequestToViewNameTranslator viewNameTranslator()
+    	{
+        	return new DefaultRequestToViewNameTranslator();//默认的去除web应用上下文url和结尾任何扩张名，例如http://licalhost:8080/mvc/foo.html转换成foo
+    	}
+	
+	@RequestMapping(value = "/user/home", method = RequestMethod.GET)
+    	@ModelAttribute("currentUser")//将函数返回的值添加到method的currentUser键上
+    	public User userHome()
+    	{
+        	User user = new User();
+        	user.setUserId(1234987234L);
+        	user.setUsername("adam");
+        	user.setName("Adam Johnson");
+        	return user;
+    	}
+
+
+
+配置内容协商
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

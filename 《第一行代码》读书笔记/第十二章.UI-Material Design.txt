@@ -1,0 +1,332 @@
+Toolbar(标题栏)
+	之前默认的标题栏是ActionBar附带在指定的主题中
+	
+在AndroidManifest.xml中的<application>
+	android:theme="@style/AppTheme">指定了使用的主题
+	这一主题在res/values/styles.xml中定义
+	
+由于要用Toolbar代替ActionBar
+	修改主题中的<style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+
+	修改布局
+	<android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_height="?attr/actionBarSize"//高度设置为ActionBar的高度
+        android:layout_width="match_parent"
+        android:background="?attr/colorPrimary"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+	
+	在活动中
+	Toolbar toolbar=findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+修改标题栏文字
+	AndroidManifest.xml中的<application>
+	android:label="aaa"
+
+
+Toolbar菜单栏(也可以显示在标题栏)
+	在菜单文件的<item>中
+	icon图标
+	title标题
+	在Toolbar中只会显示图标，在菜单中只显示title
+	app:ahowAsAction=""
+		always永远显示在Toolbar中
+		ifRoom屏幕空间足够就显示在ToolBar中不足则显示在菜单中
+		never永远显示在菜单中
+
+
+左侧的滑动菜单
+	
+DrawerLayout滑动菜单控件
+	<android.support.v4.widget.DrawerLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/drawer_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+    
+        <FrameLayout//这里包裹起来的是主界面
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <android.support.v7.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="?attr/colorPrimary"
+                android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+                app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
+            </android.support.v7.widget.Toolbar>
+        </FrameLayout>
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="start"//滑动菜单在哪一边Left/Right/start(根据习惯)
+            android:text="This is menu"
+            android:textSize="30sp"
+            android:background="#FFF"/>
+    </android.support.v4.widget.DrawerLayout>
+	
+	建议在左上角加入导航按钮（HomeAsUp）
+	mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);//显示导航按钮
+            actionBar.setHomeAsUpIndicator(R.drawable.ic_menu);//修改按钮图标
+        }
+
+	设置点击按钮弹出导航栏（参考菜单的设置点击事件）
+		在onOptionsItemSelected(MenuItem item)中添加
+		switch (item.getItemId()) {
+            		case android.R.id.home:
+                		mDrawerLayout.openDrawer(GravityCompat.START);
+                		break;
+	
+NavigationView用于实现滑动菜单内容的控件
+	引入NavigationView
+		在app/build.gradle中的dapendencies中添加
+		compile 'com.android.support:design:24.2.1'
+    		compile 'de.hdodenhof:circleimageview:2.1.0'
+
+	
+	NavigationView需要准备好menu（菜单）headerLayout(头部布局)
+	menu
+	在res/menu中新建nav_menu.xml
+	<?xml version="1.0" encoding="utf-8"?>
+    <menu xmlns:android="http://schemas.android.com/apk/res/android">
+        <group android:checkableBehavior="single">//菜单只能单选
+            <item
+                android:id="@+id/nav_call"
+                android:icon="@drawable/nav_call"
+                android:title="Call" />
+            <item
+                android:id="@+id/nav_friends"
+                android:icon="@drawable/nav_friends"
+                android:title="Friends" />
+            <item
+                android:id="@+id/nav_location"
+                android:icon="@drawable/nav_location"
+                android:title="Location" />
+            <item
+                android:id="@+id/nav_mail"
+                android:icon="@drawable/nav_mail"
+                android:title="Mail" />
+            <item
+                android:id="@+id/nav_task"
+                android:icon="@drawable/nav_task"
+                android:title="Tasks" />
+        </group>
+    </menu>
+
+	headerLayout
+	在Layout文件中新建nav_header.xml
+	<?xml version="1.0" encoding="utf-8"?>
+        <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="match_parent"
+            android:layout_height="180dp"
+            android:background="?attr/colorPrimary"
+            android:padding="10dp">
+        
+            <de.hdodenhof.circleimageview.CircleImageView//将图片圆形话
+                android:id="@+id/icon_image"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:layout_centerInParent="true"
+                android:src="@drawable/nav_icon" />
+        
+            <TextView
+                android:id="@+id/username"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:text="Tony Green"
+                android:textColor="#FFF"
+                android:textSize="14sp" />
+        
+            <TextView
+                android:id="@+id/mail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_above="@id/username"
+                android:text="tonygreendev@gmail.com"
+                android:textColor="#FFF"
+                android:textSize="14sp" />
+        
+        </RelativeLayout>
+	
+	使用NavigationView
+	<android.support.design.widget.NavigationView
+            android:id="@+id/nav_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="start"
+            app:headerLayout="@layout/nav_header"//关联headr
+            app:menu="@menu/nav_menu" />//关联menu
+	
+	在Activity中
+	NavigationView navView = (NavigationView) findViewById(R.id.nav_view);
+	navView.setCheckedItem(R.id.nav_call);//默认选中这一项
+        navView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(MenuItem item) {
+		//在此写switch_catch语句处理菜单点击
+                mDrawerLayout.closeDrawers();
+                return true;
+            }
+        });
+
+
+
+
+
+悬浮按钮和可交互提示
+
+FloatingActionButton实现悬浮按钮的控件
+	<android.support.design.widget.FloatingActionButton
+            android:id="@+id/fab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"//显示在左下角
+            android:layout_margin="16dp"
+            android:src="@drawable/ic_done"
+	    app:elevation="8pd"/>//悬浮的高度
+	想Button一样设置点击事件处理函数
+
+
+
+Snackbar类似于Toast,但是可以添加按钮
+	Snackbar.make(view, "Data deleted", Snackbar.LENGTH_SHORT)
+                .setAction("Undo", new View.OnClickListener() {//添加按钮
+                    @Override
+                    public void onClick(View v) {
+			//添加处理点击事件
+                        Toast.makeText(MainActivity.this, "Data restored", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .show();
+
+
+
+
+
+CollapsingToolbarLayout加强版FrameLayout布局(如果悬浮按钮被遮住什么的会自动调整)
+	在app/build.gradle中的dapendencies中添加
+	compile 'com.android.support:design:24.2.1'
+	使用
+	<android.support.design.widget.CollapsingToolbarLayout>
+	
+
+
+卡片式布局
+	
+CardView卡片式控件
+    	compile 'com.android.support:cardview-v7:24.2.1'
+    	compile 'com.github.bumptech.glide:glide:3.7.0'//图片加载库
+	glide用法
+	Glide.with(mContext).load(Url).into(ImageView);
+	
+
+	<android.support.v7.widget.CardView
+    		xmlns:android="http://schemas.android.com/apk/res/android"
+    		xmlns:app="http://schemas.android.com/apk/res-auto"
+    		android:layout_width="match_parent"
+    		android:layout_height="wrap_content"
+    		android:layout_margin="5dp"
+    		app:cardCornerRadius="4dp"//圆角
+		app:elevation="5dp">//高度（也是悬浮的）
+		<TextView>
+	</android.support.v7.widget.CardView>
+	外层使用RecycleView循环
+	GridLayoutManager layoutManager = new GridLayoutManager(this, 2);2列
+
+	
+使用AppBarLayout解决RecycleView遮挡Toolber
+	使用<android.support.design.widget.AppBarLayout>包住ToolBar
+	
+	在ToolBar中添加
+		app:layout_scrollFlags="scroll|enterAlways|snap"指定了RecycleView滚动时ToolBar的变化
+			scroll向上滚动时ToolBar也会向上滚动并隐藏
+			enterAlways向下滚动时ToolBar也会向下滚动并出现
+			snap ToolBar还没完全显示或隐藏时根据当前的滚动距离自动选择隐藏或显示
+
+
+
+
+下拉刷新
+	
+使RecycleView实现下拉刷新
+	使用<android.support.v4.widget.SwipeRefreshLayout>套住RecycleView
+	下拉监听
+	private SwipeRefreshLayout swipeRefresh = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh);
+        swipeRefresh.setColorSchemeResources(R.color.colorPrimary);
+        swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                refreshFruits();//自定义函数实现刷新操作
+            }
+        });
+
+
+
+借助CollapsingToolbarLayout控件实现可折叠式标题栏（包裹Toolbar）
+	引入
+		在bulid添加compile 'com.android.support:design:24.2.1'
+	CollapsingToolbarLayout必须是AppBarLayout的子布局
+	AppBarLayout又必须是CoordinatorLayout的子布局
+
+	最外层为CoordinatorLayout里面包括AppBarLayout（放置CollapsingToolbarLayout包裹的标题栏）和主要显示框
+	
+	<android.support.design.widget.CollapsingToolbarLayout
+            android:id="@+id/collapsing_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+            android:fitsSystemWindows="true"
+            app:contentScrim="?attr/colorPrimary"
+            app:layout_scrollFlags="scroll|exitUntilCollapsed">
+
+            <ImageView
+                android:id="@+id/fruit_image_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:fitsSystemWindows="true"
+                app:layout_collapseMode="parallax" />//折叠模式parallax折叠时产生错位
+
+            <android.support.v7.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                app:layout_collapseMode="pin" />//折叠模式pin折叠时位置不变
+        </android.support.design.widget.CollapsingToolbarLayout>
+
+
+背景图与系统状态栏融合（android5.0以上才支持）
+	在ImageView以及其父布局CoordinatorLayout，AppBarLayout，CollapsingToolbarLayout设置
+		android:fitsSystemWindows="true"
+	
+	将状态栏颜色设置为透明
+	res下新建values-v21文件（只有在android5.0才读取）
+	新建styles.xml
+	<?xml version="1.0" encoding="utf-8"?>
+        <resources>
+        
+            <style name="FruitActivityTheme" parent="AppTheme">
+                <item name="android:statusBarColor">@android:color/transparent</item>
+            </style>
+        
+        </resources>
+	
+	
+<ScorllView>允许以滚动的方式查看屏幕以外的内容
+
+
+
+
+
+
+
+
+

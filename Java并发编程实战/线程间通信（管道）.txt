@@ -1,0 +1,11 @@
+管道输入/输出流
+	面向字节
+		PipedOutputStream
+		PipedInputStream
+	面向字符
+		PipedReader
+		PipedWriter
+		
+	PipedWriter writer=new PipedWriter();//传入对应的线程中
+	PipedReader reader=new PipedReader();//传入对应的线程中
+	writer.connect(reader);//连接

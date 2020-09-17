@@ -1,0 +1,15 @@
+序列化
+	类实现Serializable接口
+	private static final long serialVersionUID = 8683452581122892189L;//设置序列化id
+	
+通过ObjectOutputStream和ObjectInputStream对对象进行序列化及反序列化
+	//序列化并写入文件
+	ObjectOutputStream a=new ObjectOutputStream(new FileOutputStream("aa"));
+	a.writeObject(nn);
+	//从文件中取出并反序列化
+	ObjectInputStream a=new ObjectInputStream(new FileInputStream("aa"));
+	nn= (b) a.readObject();
+	
+Transient 关键字可以阻止变量序列化
+	不会被序列化到文件
+	反序列化后该变量为初始值

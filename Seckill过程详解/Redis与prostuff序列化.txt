@@ -1,0 +1,58 @@
+	<!--添加redis依赖-->
+    <dependency>
+      <groupId>redis.clients</groupId>
+      <artifactId>jedis</artifactId>
+      <version>2.9.0</version>
+    </dependency>
+
+	
+	
+    <!--prostuff序列化依赖-->
+    <dependency>
+      <groupId>com.dyuproject.protostuff</groupId>
+      <artifactId>protostuff-core</artifactId>
+      <version>1.0.8</version>
+    </dependency>
+    <dependency>
+      <groupId>com.dyuproject.protostuff</groupId>
+      <artifactId>protostuff-runtime</artifactId>
+      <version>1.0.8</version>
+    </dependency>
+	
+	
+	
+JedisPool jedisPool=new JedisPool(String ip,int port);;	
+Jedis jedis = jedisPool.getResource();	
+
+set
+	String result = jedis.setex(key.getBytes(), timeout, bytes);//timeout为缓存时效秒int
+get
+	byte[] bytes = jedis.get(key.getBytes());
+	
+	
+value对象用prostuff序列化和反序列化
+	RuntimeSchema<Seckill> schema = RuntimeSchema.createFrom(Seckill.class);//Seckill为你要序列化的对象
+	
+	序列化
+		byte[] bytes = ProtobufIOUtil.toByteArray(seckill, schema,LinkedBuffer.allocate(LinkedBuffer.DEFAULT_BUFFER_SIZE));
+	反序列化
+		byte[] bytes = jedis.get(key.getBytes());
+		//创建空对象
+		Seckill seckill = schema.newMessage();
+		//反序列化填充seckill
+		ProtobufIOUtil.mergeFrom(bytes, seckill, schema);
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	

@@ -1,0 +1,100 @@
+<dependency>
+	<groupId>javax.servlet</groupId>
+    	<artifactId>javax.servlet-api</artifactId>
+        <version>3.1.0</version>
+        <scope>provided</scope>
+</dependency>
+
+
+创建Servlet
+public class HelloServlet extends HttpServlet
+{
+ @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+	response.getWriter().println("Hello, World!");
+    }
+
+    @Override
+    public void init() throws ServletException//Servlet创建时运行
+    {
+ 	System.out.println("Servlet " + this.getServletName() + " has started.");
+    }
+
+    @Override
+    public void destroy()//Servlet销毁时运行
+    {
+	System.out.println("Servlet " + this.getServletName() + " has stopped.");
+    }
+}
+
+配置Servlet（在web.xml中）
+
+<servlet>
+        <servlet-name>helloServlet</servlet-name>
+        <servlet-class>com.wrox.HelloServlet</servlet-class>
+	<load-on-startup>1</load-on-startup>    //Servlet在应用程序启动时立即启动，按数字顺序越大启动越晚
+</servlet>
+<servlet-mapping>
+        <servlet-name>helloServlet</servlet-name>
+        <url-pattern>/greeting</url-pattern>
+</servlet-mapping>
+
+
+获取请求参数（post.get都可以）
+	request.getParameter("a");
+	request.getParameterValues(arg0);返回全部数据
+	request.getParameterMap();
+重定向
+	response.sendRedirect("");
+
+注解配置Servlet
+	@WebServlet(
+        	name = "ticketServlet",
+        	urlPatterns = {"/tickets"},
+        	loadOnStartup = 1
+	)
+
+上下文初始化参数
+	<context-param>
+		<param-name>one</param-name>
+		<param-value>foo</param-value>
+	</context-param>
+获取上下文参数
+	ServletContext c=this.getServletContex();
+	c.getInitParameter("one");
+
+
+注解配置专属于该Servlet的初始化参数
+	@WebServlet(
+        	name = "ticketServlet",
+        	urlPatterns = {"/tickets"},
+        	loadOnStartup = 1，
+		initParams={
+			@WebInitParam(name="one",value="off")
+		}
+	)
+
+
+支持文件上传
+	@MultipartConfig(
+        	fileSizeThreshold = 5_242_880, //小于5MB保存在内存 
+        	maxFileSize = 20_971_520L, //最大20MB
+        	maxRequestSize = 41_943_040L //40MB
+	)
+
+获取上传文件
+	Part a=request.getPart("a");
+	a.write("");
+
+
+
+
+
+
+
+
+
+
+

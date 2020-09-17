@@ -1,0 +1,171 @@
+线程池工作过程
+	ThreadPoolExecutor执行execute()执行任务后
+	如果核心线程池（corePoolSize）没满，就创建线程执行任务
+	满了，如果任务队列(BlockingQueue)没满，就放入任务队列
+	满了，如果线程数还没到达线程池最大数量(maximumPoolSize)，创建线程执行任务
+	如果以到达最大线程数，则执行策略逻辑
+	
+	
+工作线程（Worker）
+	线程池中的线程为工作线程
+	执行完任务后会循环获取任务队列中的任务执行
+	
+
+线程池的创建
+	new ThreadPoolExecutor(corePoolSize,maximumPoolSize,keepAliveTime,milliseconds,runnableTaskQueue,handler)
+	
+		corePoolSize
+			核心线程池大小
+			调用线程池的prestartAllCoreThreads()会启动全部基本线程
+		
+		maximumPoolSize
+			线程池最大数量
+			
+		keepAliveTime
+			线程空闲后保持存活时间
+			
+		TimeUnit
+			//线程活动保持时间的单位
+			Days,hours。。。。
+			
+		runnableTaskQueue
+			//任务队列
+				ArrayBlockingQueue
+					//基于数组的有限阻塞队列
+				LinkedBlockingQueue
+					//基于链表的阻塞队列，吞吐量高于ArrayBlockingQueue
+				SynchronousQueue
+					//不存储元素的阻塞队列，每个插入操作必须等另一个线程调用移除操作，否则一直处于阻塞状态
+				PriorityBlockingQueue
+					//一个具有优先级的无限阻塞队列
+				
+		
+		RejectedExecutionHandler
+			//饱和策略（达到最大线程数后）
+				AbortPolicy
+					//直接抛出异常
+				CallerRunsPolicy
+					//只用调用者所在线程执行任务
+				DiscardOldestPolicy
+					//丢弃队列里最近一个任务，并执行当前任务
+				DiscardOldestPolicy
+					//直接丢弃
+					
+					
+向线程池提交任务
+	execute()
+		//提交不需要返回值的任务
+	submit()
+		//用于提交需要返回值的任务
+		返回future类型对象
+			future.get()返回结果，阻塞直到任务完成
+			future.get(long timeout,TimeUnit unit)阻塞指定时间后返回，有时任务还没执行完
+			
+关闭现线程池
+	threadPool.shuodown()
+		将线程池状态设置为SHUTDOWN然后中断没有在执行任务的线程
+	threadPool.shuodownNow()
+		将线程池状态设置为SHOW逐个调用线程的interrupt()，返回等待执行任务的列表
+		
+	//如果任务不一定要执行完，调用shuodownNow()	
+	
+	
+合理配置线程池大小
+	CPU密集型，配置1+Ncpu
+	IO密集型，配置2*Ncpu
+	
+	建议使用有界队列
+	
+线程池监控
+	threadPoolExecutor.getTaskCount()
+		获取需要执行的任务数量
+	threadPoolExecutor.getCompletedTaskCount()
+		获取已完成的任务数量
+	threadPoolExecutor.getLargestPoolSize()
+		获取曾经创建过的最大线程数量
+	threadPoolExecutor.getPoolSize()
+		线程池中线程数量
+	threadPoolExecutor.getActiveCount()
+		正在执行任务的线程数
+	
+	
+	
+	
+Executor线程池框架
+	3大组成
+		1.任务
+			被执行任务需要实现Runnable和Callable接口
+		2.任务的执行
+			继承至Executor的ExecutorService接口有2个关键实现类，ThreadPoolExecutor和ScheduledThreadPoolExecutor
+		3.任务执行结果
+			Future接口和实现这一接口的FutureTask类
+	执行机制由Executor提供
+	
+	
+Executor框架的成员
+		主要成员：
+			1.ThreadPoolExecutor
+			2.ScheduledThreadPoolExecutor
+			3.Future接口
+			4.Runnable接口
+			5.Callable接口   //会返回结果，Runnable不会
+			6.Executors
+		
+			ThreadPoolExecutor
+				//通常使用工厂类Executors来创建
+				//有3种类型的ThreadPoolExecutor
+					1.SingleThreadExecutor
+						//只会创建一个线程,保证顺序的执行任务，任何时间只有一个线程是活动的
+						//corePoolSize和maximumPoolSize被设置为1
+						//使用无界队列
+						
+					2.FixedThreadExecutor
+						//线程数目是一定的,没有非核心线程，使用无界任务队列
+						//适用于负载较重的服务器
+						//线程执行完任务后立即销毁
+						//corePoolSize和maximumPoolSize一样大创建时传入
+						//使用LinckedBlockingQueue
+						
+					3.CachedThreadExecutor
+						//线程数量无限
+						//适用于执行很多短期小任务，负载较轻的服务器
+						//使用SynchronousQueue队列
+						//maximumPoolSize为Integer.MAX_VALUE
+						
+			ScheduledThreadPoolExecutor
+				//在给定延迟后执行任务
+				//通常使用工厂类Executors来创建
+				//有2种类型的ScheduledThreadPoolExecutor
+					1.ScheduledThreadPoolExecutor
+						//固定线程个数
+					2.SingleThreadScheduledExecutor
+						//单个线程顺序运行
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	

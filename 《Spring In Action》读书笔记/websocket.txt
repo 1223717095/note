@@ -1,0 +1,40 @@
+在Spring中使用websocket
+	建立处理类继承至AbstractWebSocketHandler
+		public class MarcoHandle extends AbstractWebSocketHandler{
+			@Override
+			protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {//处理文本消息
+				session.sendMessage(new TextMessage("ppp!"));
+				System.out.println("llll");
+			}
+
+			@Override
+			protected void handleBinaryMessage(WebSocketSession session, BinaryMessage message) throws Exception {//处理二进制消息
+				super.handleBinaryMessage(session, message);
+			}
+
+			@Override
+			public void afterConnectionEstablished(WebSocketSession session) throws Exception {//连接建立时执行
+				super.afterConnectionEstablished(session);
+			}
+
+			@Override
+			public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {//连接关闭时执行
+				super.afterConnectionClosed(session, status);
+			}
+		}
+	配置启动websocket
+		@EnableWebSocket
+		public class WebSocketConfig implements WebSocketConfigurer{
+			@Override
+			public void registerWebSocketHandlers(WebSocketHandlerRegistry webSocketHandlerRegistry) {
+				System.out.println(111);
+				webSocketHandlerRegistry.addHandler(marcoHandle(),"/m");//映射到路径“/m”
+			}
+			@Bean
+			public MarcoHandle marcoHandle(){
+				return new MarcoHandle();
+			}
+		}
+	使用SockJS应对不支持websocket的场景
+		在WebSocketConfig类中的
+			webSocketHandlerRegistry.addHandler(marcoHandle(),"/m").withSockJS();

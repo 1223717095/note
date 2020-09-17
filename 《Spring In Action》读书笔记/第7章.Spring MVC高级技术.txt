@@ -1,0 +1,207 @@
+定义DispatcherServlet配置
+	使用AbstractAnnotationConfigDispatcherServletInitializer中的customizeRegistration()方法
+	AbstractAnnotationConfigDispatcherServletInitializer将DispatcherServlet注册到servlet后就会调用这个函数（可以在这个函数中设置一些事情）
+	@Override
+	protected void customizeRegistration(Dynamic registration){
+		//设置一些属性
+	}
+	
+添加其他的servlet和filter（创建新的初始化器（通过实现WebApplicationInitalizer接口））
+	注册servlet
+	public class MyServletInit implements WebApplicationInitializer{
+		@Override
+		public void onStartup(ServletContext servletContext){
+			Dynamic myServlet=servletContext.addServlet("myservlet",MyServlet.class);//注册Servlet
+			myServlet.addMapping("/");//添加映射
+		}
+	}
+	注册filter
+	public class MyFilterInit implements WebApplicationInitializer{
+		@Override
+		public void onStartup(ServletContext servletContext){
+			javax.servlet.FilterRegistartion.Dynamic myFilter=servletContext.addServlet("myFilter",MyFilter.class);//注册Servlet
+			myFilter.addMapping("/");//添加映射
+		}
+	}
+
+如果Filter只是映射到DispatcherServlet
+	通过AbstractAnnotationConfigDispatcherServletInitializer中的重载方法getServletFilters()
+	@Override
+	protected Filter[] getServletFilters(){
+		return new Filter[]{ new MyFilter() };
+	}
+	
+使用xml配置DispatcherServlet
+	<?xml version="1.0" encoding="UTF-8"?>
+    <web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
+             version="3.1">
+        <context-param>//设置根上下文配置文件位置
+            <param-name>contextConfigLocation</param-name>
+            <param-value>/WEB-INF/spring/root-context.xml</param-value>
+        </context-param>
+    
+        <listener>//注册ContextLoaderListener
+            <listenter-class>
+                org.springframework.web.context.ContextLoaderListener
+            </listenter-class>
+        </listener>
+    
+        <servlet>//注册DispatcherServlet
+            <servlet-name>appServlet</servlet-name>//如果没有<init-param>DispatcherServlet会根据Servlet名称找到应用上下文配置文件这里为/WEB-INF/appServlet-context.xml
+            <servlet-class>
+                org.springframework.web.servlet.DispatcherServlet
+            </servlet-class>
+			<init-param>//显示指名web上下文配置文件的位置
+				<param-name>contextConfigLocation</param-name>
+				<param-value>/WEB-INF/appServlet-context.xml</param-value>
+			</init-param>
+            <load-on-startup>1</load-on-startup>
+        </servlet>
+    
+        <servlet-mapping>将DispatcherServlet映射到“/”
+            <servlet-name>appServlet</servlet-name>
+            <url-pattern>/</url-pattern>
+        </servlet-mapping>
+    </web-app>
+	
+	
+在xml中使用AbstractAnnotationConfigDispatcherServletInitializer 2个上下文都从类中加载
+		在web.xml添加
+		<context-param>//告诉DispatcherService从java类而不是xml中加载配置
+			<param-name>contextClass</param-name>
+			<param-value>org.springframework.web.context.support.AnnotationConfigWebApplicationContext</param-value>
+		</context-param>
+		上下文的<param-value>改为类路径
+		在<servlet>中添加
+		<init-param>//显示指名web上下文配置文件的位置
+			<param-name>contextClass</param-name>
+			<param-value>org.springframework.web.context.support.AbstractAnnotationConfigDispatcherServletInitializer</param-value>
+		</init-param>
+	
+接受文件上传，通过配置multipart
+	在Spring3.1之后选StandarServletMultipartResolver
+		javaconfig在DispatcherServlet中
+		@Override
+		protected void customizeRegistration(ServletRegistration.Dynamic registration) {
+			super.customizeRegistration(registration);
+			registration.setMultipartConfig(new MultipartConfigElement("/tmp/spitter/uploads",2097152,4194304,0));
+			//"/tmp/spitter/uploads"上传文件将临时写入该目录
+			//上传文件最大容量2MB字节为单位
+			//整个请求的最大容量为4MB
+			//当文件达到这个容量时写入临时文件路径，默认0表示全部文件都会写入
+		}
+
+		使用web.xml配置multipart
+			在servlet中添加
+			<multipart-config>
+				<location>/tem/spitter</location>
+				<max-file-size>2097152</max-file-size>
+				<max-request-size>4194304</max-request-size>
+			</multipart-config>
+	Spring3.0之前用CommonsMultipartResolver（创建为bean）
+		@Bean
+		public MultipartResolver multipartResolver() throws IOException {
+			CommonsMultipartResolver multipartResolver=new CommonsMultipartResolver();
+			multipartResolver.setUploadTempDir(new FileSystemResource("/tem/spitter"));//临时目录
+			multipartResolver.setMaxUploadSize(2097152);//最大上传文件大小
+			multipartResolver.setMaxInMemorySize(0);//最大内存大小
+			return multipartResolver;
+		}
+		
+	接收上传文件
+		在控制器方法参数添加
+		@RequestPart("part") byte[] profile//实现了MultipartFile接口
+		String getName();
+		String getOriginalFilename();
+		String getContentType();
+		boolean isEmpty();
+		long getSize();
+		byte[] getBytes();
+		InputStream getInputStream();
+		void transferTo(File);
+		
+可以直接使用Part接收文件不用设置multipart
+	在控制器方法参数添加
+	@RequestPart("part") Part profile
+	
+	
+
+异常处理
+	使用@ResponseStatus()注解绑定HTTP状态码
+	一般写在自定义的异常类上
+	在控制器中抛出自定义的异常
+	
+	
+	在控制器类中添加异常处理方法，处理（这个）控制器类中全部控制器方法的运行时异常
+		@ExceptionHandler(DuplicateSpittleException.class)
+		  public String handleNotFound() {
+			return "error/duplicate";//与其他控制器方法一样返回逻辑视图名
+		  }
+		DuplicateSpittleException为自定义异常extends RuntimeException
+	
+	
+	为（全部）控制器方法添加异常通知
+		@ControllerAdvice
+		public class AppWideExceptionHandler {//异常通知类
+		  @ExceptionHandler(DuplicateSpittleException.class)//自定义异常
+		  public String handleNotFound() {
+			return "error/duplicate";
+		  }
+
+		}
+		
+		
+		
+在重定向中传递数据
+	在处理完POST请求后通常会重定向避免刷新页面引发的重新发送数据
+	但是在重定向时模型数据会失效
+	使用flash属性保存数据
+	在控制器方法参数添加
+		RedirecAttributes model
+	在控制器方法中
+		model.addFlashAttribute("spitter",spitter);//保存数据key为spitter
+	取出数据
+		model.containAttribute("key")
+			
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	

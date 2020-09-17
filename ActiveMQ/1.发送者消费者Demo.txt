@@ -1,0 +1,58 @@
+
+web控制台http://127.0.0.1:8161/admin/queues.jsp
+
+发送消息
+	创建连接工厂
+		ConnectionFactory connectionFactory=new ActiveMQConnectionFactory(
+				"admin1",
+					"admin1",
+					"tcp://localhost:61616"
+			);
+	创建连接
+		Connection connection=connectionFactory.createConnection();
+	连接开启	
+		connection.start();
+	创建session(上下文环境对象)  
+		Session session=connection.createSession(Boolean.FALSE,Session.AUTO_ACKNOWLEDGE);
+		//参数是否开启会话,签收模式(不签收会一直留在队列里)
+			AUTO_ACKNOWLEDGE：表示在消费者receive消息的时候自动的签收
+			CLIENT_ACKNOWLEDGE：表示消费者receive消息后必须手动的调用acknowledge()方法进行签收
+			DUPS_OK_ACKNOWLEDGE：签不签收无所谓了，只要消费者能够容忍重复的消息接受，当然这样会降低Session的开销
+
+	创建Destination		
+		Destination destination=session.createQueue("queue1");
+
+	创建消息发送者	
+		MessageProducer messageProducer=session.createProducer(destination);
+	
+	设置持久化方式
+		messageProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+	设置消息对象发送	
+		TextMessage textMessage=session.createTextMessage();
+		textMessage.setText("1111");
+		messageProducer.send(textMessage);
+			//send()参数
+			TTL，消息的存活时间，一句话：生产者生产了消息，如果消费者不来消费，那么这条消息保持多久的有效期
+			priority，消息优先级，0-9。0-4是普通消息，5-9是加急消息，消息默认级别是4。注意，消息优先级只是一个理论上的概念，并不能绝对保证优先级高的消息一定被消费者优先消费！也就是说ActiveMQ并不能保证消费的顺序性！
+			deliveryMode，如果不指定，默认是持久化的消息。如果可以容忍消息的丢失，那么采用非持久化的方式，将会改善性能、减少存储的开销。
+	关闭连接	
+		connection.close();
+		
+		
+		
+		
+		
+		
+		
+		
+		
+消费者
+	MessageConsumer messageConsumer=session.createConsumer(destination);
+    TextMessage textMessage= (TextMessage) messageConsumer.receive();
+    System.out.println(textMessage.getText());
+	
+	
+创建topic（发布订阅模式）
+		Destination destination=session.createTopic("topic1");
+	
+	

@@ -1,0 +1,147 @@
+配置DelegaingFilterProxy(拦截发往应用的全部请求，并委托给拦截器)
+	在web.xml配置
+		<filter>
+			<filter-name>SpringSecurityFilterChain</filter-name>
+			<filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
+		</filter>
+	在java中配置
+		public class SecurityWebInitializer extends AbstractSecurityWebApplicationInitializer{}
+		
+配置Spring Security
+	在根上下文@Import({SecurityConfig.class})
+	创建一个新的类
+	@Configuration
+	@EnableWebSecurity//启动SpringSecurity，如果是在SpringMVC中用@EnableWebMVCSecurity
+	public class SecurityConfig extends WebSecurityConfigurerAdapter{
+	
+	}
+	//上面的配置会将应用锁定
+	
+	
+	
+	//需要重载WebSecurityconfigurerAdapter中的configure方法
+		configuure(WebSecurity)//配置WebSecurity的Filter链
+		configuure(HttpSecurity)//配置如何通过拦截器保护请求
+		configuure(AuthenticationMessageBuilder)//配置user-detail服务，用户的信息存储
+	
+	
+	configuure(AuthenticationMessageBuilder)//配置user-detail服务，用户的信息存储
+		配置基于内存的用户存储configuure(AuthenticationMessageBuilder)
+		@Override
+		protected void configure(AuthenticationMessageBuilder auth){
+			auth.inMemoryAuthentication().withUser("username"),password("password"),roles("USER").and()
+			.withUser("admin"),password("password"),roles("USER","ADMIN");
+		}
+		AuthenticationMessageBuilder的方法
+			withUser(String)//添加新用户
+			password(String)//设置密码
+			roles(String...)//赋予用户角色，roles("USER")相当于authorities("ROLE_USER")
+			and()//连接配置
+			accountExpried(boolean)//定义账号是否已过期
+			accountLocked(boolean)//定义账号是否已锁定
+			credentialsExpried(boolean)//定义凭证是否已过期
+			disabled(boolean)//定义账号是否已禁用
+			
+		
+		
+		
+		配置基于数据库表的用户存储configuure(AuthenticationMessageBuilder)	
+			@Autowired//通过依赖注入得到数据库
+			DataSource dataSource;
+			@Override
+			protected void configure(AuthenticationMessageBuilder auth){
+				auth.jdbcAuthentication().dataSource(dataSource);
+			}
+			默认的数据库查询语句
+				usersByUsernameQuery:"select username,password,enable(是否启用) from users where username=?"//查询用户名，密码，是否启用
+				authoritiesByUsernameQuery:"select username,authority from authorities where username=?"//用户所赋予的权限
+				groupAuthoritiesByUsername:"select g.id,g.group_name,ga.authority from groups g,group_members gm,group_authorities ga where gm.username=? and g.id=ga.group_id and g.id= gm.group_id"//查询用户作为群组成员的权限
+				
+			可以利用usersByUsernameQuery("") authoritiesByUsernameQuery("") groupAuthoritiesByUsername("")方法重写sql语句
+			
+			使用转码后的密码(数据库中的密码永远不会解码)
+				.passwordEncoder(new StanderdPasswordEncoder("53cr3t"))
+				
+				
+		配置基于LDAP的用户存储	
+		
+		配置自定义的用户储存
+	
+		
+	configuure(HttpSecurity)//配置如何通过拦截器保护请求	
+		@Override
+		protected void configure(HttpSecurity http){
+			http.anthorizeRequests()
+				.antMatchers("url").authenticated()//允许认证的用户访问该链接
+				.antMatchers(HttpMethod.POST,"url").authenticated()//允许认证的用户访问该链接的post方法
+				,anyRequest().permiAll();//其他链接无条件允许访问
+		}
+		保护路径配置方法
+			access(String)//给定SpEL表达式为true时允许访问 access("aa  and bb")
+			anonymous()//允许匿名用户访问
+			authenticated()//允许认证过的用户访问
+			denyAll()//无条件拒绝
+			permitAll()//无条件允许
+			fullyAuthenticated()//如果用户认证时完整的就允许访问（不是通过Remember-me认证的）
+			hasAnyAuthority(String...)//具备给定权限中的某一个
+			hasAnyRole(String...)//具备给定角色中的某一个
+			hasAuthority(String)//具备给定权限
+			hasIpAddress(String)//如果请求来自给定ip地址
+			hasRole(String)//具备给定角色
+			not()//对其他访问方法结果求反
+			
+			rememberMe()//如果用户是通过Remember-me认证的就允许
+		
+			access(String)SpringSecurity提供了一些SPEL安全表达式都是返回boolean类型
+				authentication//用户认证对象
+				denyAll//始终为false
+				hasAnyRole(String...)
+				hasRole(String)
+				hasIpAddress(String)
+				isAnonymous()//是否为匿名用户
+				isAuthenticated()//是否已认证
+				isFullyAuthenticated()//是否完整认证
+				isRememberMe()//是否通过Remember-Me认证
+				permitAll//始终为true
+				principal//用户的principal对象
+				
+		
+	强制通道安全性（使用HTTPS）
+		在configuure(HttpSecurity)中配置完其他的后.requiresChannel().antMatchers("url").requiresSecure()//重定向到HTTPS
+		.requiresInecure()//始终使用http
+	防止跨境请求伪造（CSRF）
+		html中<form>标签的action属性添加Thymeleaf命名空间前缀
+		在jsp中<input type="hidden" name="${_csrf.parameterName}"
+					value="${_csrf.token}"/>
+		
+	认证用户
+		默认的configuure(HttpSecurity)会自带一个登陆页面
+		重写这一方法后会丢失
+		找回
+			http.formLogin().and()...
+			
+	HTTP Basic认证（不是通过html页面而是弹出对话框Restful API）
+		.httpBasic().realmName("url").and()//realmName指定域
+		
+	启动Remember-me功能	
+		.rememberMe().tokenValiditySecunds(2419200).key("spittrkey")
+		//通过在cookie中添加token实现Remember-me，token包含用户名，密码，过期时间，私钥，通过MD5哈希储存
+		//tokenValiditySecunds过期时间默认为2周单位为秒
+		//key("spittrkey")私钥名
+		让用户启动Remember-me功能
+		<input id="rememberMe" name="remember-me" type="checkbox">
+		<label for="remember-me" class="inline">rememberMe</lable>
+		
+	退出
+		SpringSecurity默认拦截/logout连接
+		然后为用户退出，清除rememberme token,重定向到/login?logout允许用户再次登陆
+		.logout().logoutSuccessUrl("url").logout("url")
+		//logoutSuccessUrl退出成功后重定向地址，logout退出地址
+		
+		
+		
+		
+		
+使用SpringSecurity的jsp标签库
+
+	

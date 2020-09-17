@@ -1,0 +1,124 @@
+使用AspectJ编写切点
+	execution(* concert.Performance.perform(..)) && within (concert.*)
+	//execution在方法返回时调用，括号中是指定的方法，*返回任意类型，包名类名方法名，..表示使用任意参数,＋匹配给定类的任意子类
+	//&& || ! 也可以用and or not,within限制切点匹配的位置，concert包下的任意类
+	bean("id")选择bean
+	
+使用AspectJ注解的类编写切面
+	@AspectJ注解类表明这是一个切面
+	@After("目标方法")//在目标方法返回或抛出异常后调用
+	@AfterReturning("目标方法")//在目标方法返回后调用
+	@AfterThrowing("目标方法")//在目标方法抛出异常后调用
+	@Around("目标方法")//通知方法将目标方法封装起来
+	@Before("目标方法")//在目标方法调用之前执行
+		
+	@AspectJ
+	public class a{
+		@Before("execution(* concert.Performance.perform(..))")
+		public void takeSeats(){//此为一个切点
+			System.out.println("");
+		}
+	}
+	
+	@Around("performance()")//环绕被通知的方法
+	public void takeSeats(ProceedingJoinPoint jp){//通过ProceedingJoinPoint来调用被通知方法
+		System.out.println("");
+		jp.proceed();//将控制权交给被调用方法
+		System.out.println("");
+	}
+	@Pointcut定义可重用切点(在同一个切面内)
+		
+	@AspectJ
+	public class a{
+		@Pointcut("execution(* concert.Performance.perform(..))")
+		public void performance(){}
+		
+		@Before("performance()")
+		public void takeSeats(){//此为一个切点
+			System.out.println("");
+		}
+	}
+	
+启动切面
+		使用javaCnfig时
+			在配置类前@EnableAspectJAutoProxy//启动AspectJ自动代理
+			在配置类中将切面注册为bean
+		使用xml时
+			<aop:aspectj-autoproxy proxy-target-class="true"/>//使用CGLIB代理
+			注册bean
+			
+			
+在通知方法中得到被通知方法的参数
+	@Aspect
+	public class Lis {
+		@Pointcut("execution(* beanText.CompactDisc.play(int,int)) && args(a,b)")//限制参数
+		public void performance(int a,int b){}
+		
+		@Before("performance(a,b)")
+		public void takeSeats(int a,int b) {//得到参数
+			System.out.println(a+"333333333333");
+		}
+	}
+	
+	
+利用切面在bean中添加新方法（通过实现接口）
+	创建一个接口
+	创建一个实现该接口的类
+	在切面中
+	@DeclareParents(value="beanText.CompactDisc+",defaultImpl=EaClass.class)//value指定要引入该接口的bean，defaultImpl要引入的接口的实现类
+	public static Ea ttt;Ea为该接口类型
+	
+	
+	
+	
+在xml中声明切面
+	创建一个没有任何注解的切面类（包含通知方法）
+	public class Audience{
+		public void sil(){//通知方法
+			System.out.println("1");
+		}
+	}
+	将这个类声明为bean
+	在xml中
+	<aop:config>
+		<aop:aspect ref="Audience">//定义一个切面，ref引入切面的bean
+		<aop:before//前置通知
+			pointcut="execution(* beanText.CompactDisc.play(int,int))"
+			method="sil"/>//通知方法名
+		</aop:aspect>
+	</aop:config>
+	<aop:aspectj-autoproxy/>//启动切面
+	aop配置元素
+	<aop:after>//后置通知
+	<aop:after-returning>//返回通知
+	<aop:after-throwing>//异常通知
+	<aop:around>//环绕通知,通知方法依旧要引入ProceedingJoinPoint
+	<aop:advisor>//定义aop通知器
+	<aop:poincut>//定义一个可重用切点
+	<aop:declare-parents>//引入接口
+	
+	<aop:poincut>用法
+	<aop:poincut    //定义一个可重用切点
+		id="aaa"
+		expression="execution(* beanText.CompactDisc.play(int,int))"/>
+	<aop:before     //重用切点
+			pointcut-ref="aaa"
+			method="sil"/>
+			
+	<aop:declare-parents>用法
+	<aop:declare-parents
+		types-matching=""//指定要引入该接口的bean
+		implement-interface=""//要引入的接口
+		default-impl="">//要引入的接口的实现类(或者用delegate-ref引入一个bean)
+	
+	
+xml为切面注入依赖
+	<bean class="" factory-method=“aspectOf”>
+		<property name="需要注入的属性" ref="要注入进来的bean的id">
+	</bean>	
+	
+	
+	
+	
+	
+	

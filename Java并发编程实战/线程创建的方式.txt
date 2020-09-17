@@ -1,0 +1,4 @@
+线程创建的3种方式
+	继承Thread类，重写run()
+	实现Runnable接口，重写run()
+	实现Callable接口，重写call()有返回值，返回Future类，.get()获取返回值

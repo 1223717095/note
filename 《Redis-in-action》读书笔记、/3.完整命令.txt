@@ -1,0 +1,95 @@
+字符串
+	//可以存储字符串，整数，浮点数
+	
+	
+	加减与自增自减
+		incr key         //该键的值加1
+		decr key          //该键的值减1
+		incrby key 2      //该键的值加2
+		decrby key 2      //该键的值减2
+		incrbyfloat key 1 //该键的值加上浮点数1
+		
+		
+		//如果对一个不存在的键或者空串的键进行自加自减会被当成原值为0处理
+		
+	处理子串和二进制位
+		append key value    //添加子串到末尾
+		
+		getrange key start end   //获取索引start-end的子串（包括start和end）
+		
+		setrange key start value  //从start偏移量开始代替为value
+		
+		getbit key start  //将字节串看成二进制串，返回偏移量位start的值
+		
+		setbit key start value //将字节串看成二进制串，将偏移量为start的值设置为value
+		
+		bitcount key [start end]   //统计二进制串中为1的数量，范围可选
+		
+		
+列表
+	阻塞式列表弹出和列表间移动元素
+		blpop list [list1,list2] timeout   //从第一个非空列表弹出位于最左端的元素,或在timeout秒之内阻塞并等待可弹出元素出现
+		
+		brpop list [list1,list2] timeout   //从第一个非空列表弹出位于最右端的元素,或在timeout秒之内阻塞并等待可弹出元素出现
+		
+		rpoplpush list1 list2              //从list1中弹出最右端的元素，推入list2最左端，并返回这个值
+		
+		brpoplpush list1 list2 timeout     //从list1中弹出最右端的元素，推入list2最左端，如果list1为空阻塞timeout秒等待
+		
+		
+集合
+	组合和处理多个集合
+		sdiff key [key1,key2]  //返回存在于第一个集合而不存在于其他集合的元素
+		
+		sdiffstore set1 set2 [set3,set4]   //将存在于set2，但不存在于[]中其他集合的元素储存到set1
+		
+		sinter set1 [set2,set3]           //返回存在于全部集合的元素
+		
+		sinterstore set set1 [set2,set3]  //将存在于全部集合的元素，储存到set
+		
+		sunion set1 [set2,set3]         //返回并集
+		
+		sunion set set1 [set2,set3]		//将并集，储存到set
+		
+		
+散列表
+	hexists map key         //检查给定键是否存在于散列中
+	
+	hkeys map               //返回包含的全部键
+	
+	hvals  map                  //返回全部值
+	
+	hgetall map              //返回全部键值对
+	
+	hincrby map key value    //将key对应的值加上value
+	
+	hincrbyfloat map key value    //将key对应的值加上浮点数value
+		
+		
+有序集合
+	范围处理，并集交集
+		zrevrank key member     //返回member排名，按从大到小排列
+		
+		zrevrange key start stop  //返回给定排名范围的menber，按从大到小排列
+		
+		zrangebyscore key min max   //返回分值介于min和max的member
+		
+		zrevrangebyscore key min max   //返回分值介于min和max的member，按分值从大到小返回
+		
+		zremrangebyrank key start stop  //移除排名介于start和stop的menber
+		
+		zremrangebyscore key min max    //移除分值介于start和stop的menber
+		
+		zinterstore key key2           //交集,分值全部加起来
+		
+		zunionstore key key2            //并集，输出最小的分值
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		

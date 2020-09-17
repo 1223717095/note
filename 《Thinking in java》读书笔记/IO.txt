@@ -1,0 +1,29 @@
+使用流时一定要用close关闭流
+InputStream输入流
+	int read(byte[] b)读入字节数组返回长度，-1为结尾，最多读入b.length	
+	int read(byte[] b，int off,int len)指定字节在b中的偏移量和最大长度长度，返回实际长度
+	long skip(long n)在输入流中跳过n个字节，返回实际跳过字节数
+	void mark(int l)在当前位置打个标签，如果以读入多于l则忽略这个标签
+	void reset()返回到最后一个标签，没有则不变
+	boolean markSupported()是否支持打标签
+
+OutputString输出流
+	void write(byte[] b,int off,int len)第一个写出字节在b中的偏移量，写入长度
+	void close()
+	void flush()冲刷
+
+DirectoryStream<Path> entries=Files.newDirectoryStream(Paths.get();//返回文件对象集合
+Files.copy(fromPath,toPath);//复制文件
+
+使用FileInptStream和FileOutPutStream复制文件
+		FileInputStream filein=new FileInputStream("a.jpg");
+		FileOutputStream fileout=new FileOutputStream("b.jpg");
+		byte[] b=new byte[100];
+		int len=0;
+		while((len=filein.read(b))!=-1) {
+			fileout.write(b, 0, len);
+			
+		}
+	
+	
+	

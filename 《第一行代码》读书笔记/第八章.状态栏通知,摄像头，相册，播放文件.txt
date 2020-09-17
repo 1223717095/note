@@ -1,0 +1,267 @@
+创建一个NotificationManager来管理通知
+	NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);//Context.NOTIFICATION_SERVICE用于确定获取系统的什么服务
+	Notification notification = new NotificationCompat.Builder(this)
+                        .setContentTitle("This is content title")//通知标题
+                        .setContentText("This is content text")//内容
+                        .setWhen(System.currentTimeMillis())//通知被创建的时间
+                        .setSmallIcon(R.mipmap.ic_launcher)//设置通知的小图标（只能用纯alpha图片）
+                        .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher))//设置通知的小图标下拉后看到
+                        .setContentIntent(pi)
+                //      .setSound(Uri.fromFile(new File("/system/media/audio/ringtones/Luna.ogg")))//通知发出时播放一段音频
+                //      .setVibrate(new long[]{0, 1000, 1000, 1000})//使手机震动停0秒，镇1秒，停1秒，镇1秒
+								    //震动需要权限在AndroidManifest.xml中<user-permission android:name="android.permission.VIBRATE" />
+                //      .setLights(Color.GREEN, 1000, 1000)//指示灯亮，颜色，亮起时长，暗去时长
+                //      .setDefaults(NotificationCompat.DEFAULT_ALL)//默认设置
+                //      .setStyle(new NotificationCompat.BigTextStyle().bigText("Learn how to build notifications, send and sync data, and use voice actions. Get the official Android IDE and developer tools to build apps for Android."))//用于显示较长的文本
+                //      .setStyle(new NotificationCompat.BigPictureStyle().bigPicture(BitmapFactory.decodeResource(getResources(), R.drawable.big_image)))//用于显示大图片
+                //      .setPriority(NotificationCompat.PRIORITY_MAX)//弹出横幅
+                        .build();//建立
+	manager.notify(1, notification);//第一个参数为id使通知显示出来
+
+设置点击通知后启动的Activity
+		Intent intent = new Intent(this, NotificationActivity.class);
+        	PendingIntent pi = PendingIntent.getActivity(this, 0, intent, 0);//延迟启动Activity
+		NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                Notification notification = new NotificationCompat.Builder(this)
+                        .setContentTitle("This is content title")
+                        .setContentText("This is content text")
+                        .setWhen(System.currentTimeMillis())
+                        .setSmallIcon(R.mipmap.ic_launcher)
+                        .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher))
+                        .setContentIntent(pi)//将活动添加进去
+                //        .setSound(Uri.fromFile(new File("/system/media/audio/ringtones/Luna.ogg")))
+                //        .setVibrate(new long[]{0, 1000, 1000, 1000})
+                //        .setLights(Color.GREEN, 1000, 1000)
+                //        .setDefaults(NotificationCompat.DEFAULT_ALL)
+                //        .setStyle(new NotificationCompat.BigTextStyle().bigText("Learn how to build notifications, send and sync data, and use voice actions. Get the official Android IDE and developer tools to build apps for Android."))
+                //        .setStyle(new NotificationCompat.BigPictureStyle().bigPicture(BitmapFactory.decodeResource(getResources(), R.drawable.big_image)))
+                        .setAutoCancel(true)//点击后取消通知（或者是manager.cancel(1)传入id）
+			.setPriority(NotificationCompat.PRIORITY_MAX)
+                        .build();
+                manager.notify(1, notification);
+
+
+调用摄像头拍摄及显示
+		File outputImage = new File(getExternalCacheDir(), "output_image.jpg");//创建一个用于储存拍摄照片的文件
+                try {
+                    if (outputImage.exists()) {
+                        outputImage.delete();
+                    }
+                    outputImage.createNewFile();//将文件存放到sd卡的应用关联缓存目录
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                if (Build.VERSION.SDK_INT < 24) {//转换成uri对象
+                    imageUri = Uri.fromFile(outputImage);
+                } else {
+                    imageUri = FileProvider.getUriForFile(MainActivity.this, "com.example.cameraalbumtest.fileprovider", outputImage);
+                }
+                // 启动相机程序
+                Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);//传入图片文件uri
+                startActivityForResult(intent, TAKE_PHOTO);//启动活动会回调onActivityResult()，TAKE_PHOTO是自定义的标识符在回掉onActivityResult函数的requestcode中显示
+		
+		回调函数
+		protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        		switch (requestCode) {
+            		case TAKE_PHOTO:
+                		if (resultCode == RESULT_OK) {
+                    		try {
+                        // 将拍摄的照片显示出来
+                        Bitmap bitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri));
+                        picture.setImageBitmap(bitmap);
+                    	} catch (Exception e) {
+                        	e.printStackTrace();
+                    	}
+                		}
+                		break;
+
+            			default:
+                		break;
+        		}
+    		}
+		//FileProvider是一种特殊的内容提供器需要在AndroidManifest.xml中注册
+		在<appilcation>中
+		<provider
+            	android:name="android.support.v4.content.FileProvider"//固定的
+            	android:authorities="com.example.cameraalbumtest.fileprovider"//必须和前面的FileProvider.getUriForFile(）第二个参数一致
+            	android:exported="false"
+            	android:grantUriPermissions="true">
+            	<meta-data//用来指定uri的共享路径
+                	android:name="android.support.FILE_PROVIDER_PATHS"
+                	android:resource="@xml/file_paths" />引用这个资源
+        	</provider>
+		
+		res->new->xml目录->new file_paths.xml
+		<?xml version="1.0" encoding="utf-8"?>
+		<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    			<external-path name="my_images" path="" />//空值表示共享整个sd卡
+		</paths>
+
+
+
+打开相册选择图片
+	
+	在AndroidManifest.xml中申请权限读取设备文件<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+	if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {//运行时权限的申请
+                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{ Manifest.permission. WRITE_EXTERNAL_STORAGE }, 1);
+        } else {
+                    openAlbum();
+        }
+	private void openAlbum() {
+        	Intent intent = new Intent("android.intent.action.GET_CONTENT");
+        	intent.setType("image/*");
+        	startActivityForResult(intent, CHOOSE_PHOTO); // 打开相册
+    	}
+
+	相册的回调函数
+	 @Override
+    	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case TAKE_PHOTO:
+                ...
+            case CHOOSE_PHOTO:
+                if (resultCode == RESULT_OK) {
+                    // 判断手机系统版本号
+                    if (Build.VERSION.SDK_INT >= 19) {
+                        // 4.4及以上系统使用这个方法处理图片
+                        handleImageOnKitKat(data);
+                    } else {
+                        // 4.4以下系统使用这个方法处理图片
+                        handleImageBeforeKitKat(data);
+                    }
+                }
+                break;
+            default:
+                break;
+        }
+    }
+	
+	@TargetApi(19)
+    	private void handleImageOnKitKat(Intent data) {
+        String imagePath = null;
+        Uri uri = data.getData();
+        Log.d("TAG", "handleImageOnKitKat: uri is " + uri);
+        if (DocumentsContract.isDocumentUri(this, uri)) {
+            // 如果是document类型的Uri，则通过document id处理
+            String docId = DocumentsContract.getDocumentId(uri);
+            if("com.android.providers.media.documents".equals(uri.getAuthority())) {
+                String id = docId.split(":")[1]; // 解析出数字格式的id
+                String selection = MediaStore.Images.Media._ID + "=" + id;
+                imagePath = getImagePath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, selection);
+            } else if ("com.android.providers.downloads.documents".equals(uri.getAuthority())) {
+                Uri contentUri = ContentUris.withAppendedId(Uri.parse("content://downloads/public_downloads"), Long.valueOf(docId));
+                imagePath = getImagePath(contentUri, null);
+            }
+        } else if ("content".equalsIgnoreCase(uri.getScheme())) {
+            // 如果是content类型的Uri，则使用普通方式处理
+            imagePath = getImagePath(uri, null);
+        } else if ("file".equalsIgnoreCase(uri.getScheme())) {
+            // 如果是file类型的Uri，直接获取图片路径即可
+            imagePath = uri.getPath();
+        }
+        displayImage(imagePath); // 根据图片路径显示图片
+    }
+
+    private void handleImageBeforeKitKat(Intent data) {
+        Uri uri = data.getData();
+        String imagePath = getImagePath(uri, null);
+        displayImage(imagePath);
+    }
+
+    显示图片的函数
+    private void displayImage(String imagePath) {
+        if (imagePath != null) {
+            Bitmap bitmap = BitmapFactory.decodeFile(imagePath);
+            picture.setImageBitmap(bitmap);
+        } else {
+            Toast.makeText(this, "failed to get image", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
+播放音频
+	MediaPlayer类提供的控制方法
+	setDataSource()//设置要播放音频的位置
+	prepare()//开始播放前调用这个方法完成准备工作
+	start()//开始或继续
+	pause()//暂停
+	reset()//重置MediaPlay到刚创建的状态
+	seekTo()//重指定的位置开始播放音频
+	stop()//停止播放，无法在开始播放
+	release()//释放掉MediaPlay相关资源
+	isPlaying()//判断当前是否正在播放
+	getDuration()//获取音频时长
+
+
+	在AndroidManifest.xml中申请权限读取设备文件<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+	申请运行时权限
+	if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{ Manifest.permission. WRITE_EXTERNAL_STORAGE }, 1);
+        } else {
+            initMediaPlayer(); // 初始化MediaPlayer
+        }
+
+	private void initMediaPlayer() {//设置路径初始化
+        try {
+            File file = new File(Environment.getExternalStorageDirectory(), "music.mp3");
+            mediaPlayer.setDataSource(file.getPath()); // 指定音频文件的路径
+            mediaPlayer.prepare(); // 让MediaPlayer进入到准备状态
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        }
+	@Override
+    	public void onClick(View v) {//控制多个按钮
+        switch (v.getId()) {
+            case R.id.play:
+                if (!mediaPlayer.isPlaying()) {
+                    mediaPlayer.start(); // 开始播放
+                }
+                break;
+            case R.id.pause:
+                if (mediaPlayer.isPlaying()) {
+                    mediaPlayer.pause(); // 暂停播放
+                }
+                break;
+            case R.id.stop:
+                if (mediaPlayer.isPlaying()) {
+                    mediaPlayer.reset(); // 停止播放
+                    initMediaPlayer();
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+
+播放视频
+	VideoView类提供的控制方法
+	setVideoPath()//设置要播放视频的位置
+	start()//开始或继续
+	pause()//暂停
+	resume()//从头开始播放
+	seekTo()//重指定的位置开始播放音频
+	release()//释放掉MediaPlay相关资源
+	getDuration()//获取音频时长
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

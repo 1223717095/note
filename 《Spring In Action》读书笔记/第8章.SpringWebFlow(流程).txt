@@ -1,0 +1,128 @@
+声明命名空间
+	xmlns:flow="http://www.springframework.org/schema/webflow-config"
+	在xsi:schemaLocation=中添加
+		http://www.springframework.org/schema/webflow-config 
+		http://www.springframework.org/schema/webflow-config/spring-webflow-config-2.3.xsd
+
+配置流程执行器（spring应用上下文）
+	<flow:flow-executor id="flowExecutor" />
+	
+配置流程注册表（加载流程定义让执行器能够使用他们）（spring应用上下文）
+	<flow:flow-registry id="flowRegistry" base-path="/WEB-INF/flows">
+		<flow:flow-location-pattern value="/**/*-flow.xml" />//查找加载流程定义，**为流程id
+		//例如\WEB-INF\flows\pizza\order\order-flow.xml   流程id为order
+	</flow:flow-registry>
+	显示定义位置和id
+	<flow:flow-registry id="flowRegistry">
+		<flow:flow-location id="pizza" path="/WEB-INF/flows/pizza/order/order-flow.xml" />
+	</flow:flow-registry>
+	
+处理流程请求（spring应用上下文）
+	配置流程的map
+	<bean class="org.springframework.webflow.mvc.servlet.FlowHandlerMapping">
+		<property name="flowRegistry" ref="flowRegistry" />//引用了流程注册表id
+		//将url匹配到流程上例如：url为/pizza匹配到id为pizza的流程上
+	</bean>
+	<bean class="org.springframework.webflow.mvc.servlet.FlowHandlerAdapter">
+		<property name="flowExecutor" ref="flowExecutor" />//引用了流程执行器的id
+	</bean>
+	
+	
+定义流程
+	流程定义文件（被<flow>包裹）里的第一个状态为访问的第一个状态，或者是在<flow start-state="需要启动第一个状态id	">
+
+流程组件
+	状态 	//逻辑执行的地方
+	转移	//从一个状态到另一个状态
+	流程数据
+	
+	状态
+		行为   	//逻辑执行的地方
+		决策	//基于流程数据决定流程方向
+		结束	//流程终止
+		子流程	//启动一个新的流程
+		视图	//暂停流程展示给用户视图
+	
+		视图状态
+			在流程定义xml中
+			<view-state id="welcome" view="greeting" model="packet.class"/>
+			//view为逻辑视图名，如果没有这一属性则逻辑视图名为id的值，model如果视图中有一个表单则需要设置这一属性表示表单绑定的对象
+			
+		行为状态
+			在流程定义xml中
+			<action-state id="saveOrder">
+				<evaluate expression="pizza.saveOrder(order)">//表示行为状态要做的事情，这里为SpEL表达式，找到id为pizza的beam调用saveOrder方法
+				<transition to="thanksYou">
+			</action-state>	
+		
+		决策状态
+			<decision-state id="checkDeliveryArea">
+			  <if test="pizzaFlowActions.checkDeliveryArea(order.customer.zipCode)" //一个返回boolean类型的方法
+				  then="addCustomer"  		//如果为true进入这个状态
+				  else="deliveryWarning"/>	//如果为false进入这个状态
+			</decision-state>
+	
+		子流程状态，父流程阻塞
+			<subflow-state id="order" subflow="pizza/order">
+				<input name="order" value="order"/>//作为子流程输入
+				<transition on="orderCreated" to="payment"/>//如果子流程的结束状态id为orderCreated则转移到payment状态
+			</subflow-state>
+	
+		结束状态
+			<end-state id="">
+			如果结束的为子流程则父流程继续执行
+			view属性
+				如果设置了view属性则渲染相对于流程路径的视图
+				逻辑视图名添加externalRedirect:前缀则重定向到流程外部页面
+				逻辑视图名添加flowRedirect:前缀则重定向到令一个流程中
+				
+			
+	转移
+		状态中至少都需要一个转移（除了结束状态）
+		<transition>作为状态的子元素
+		<transition to="a">//转移到状态a
+		<transition on="b" to="a">//如果触发了b事件则转移到a状态，事件：行为状态中为表达式得到的结果，子流程状态中为状态结束id
+		抛异常时转移
+		<transition to="registrationForm" on-exception=
+            "com.springinaction.pizza.service.CustomerNotFoundException" />
+		全局转移（复用状态中的转移）
+			<global-transitions>
+				<transition on="b" to="a"/>
+			</global-transitions>
+			流程中的全部状态都默认拥有这个转移
+			
+	
+	流程数据
+		声明变量
+			在流程中声明
+				<var name="customer" class="com.Cus"/>//创建一个类型为Cus名字为customer的变量
+			在状态中
+				<evaluate result="viewScope.a" expression="b"/>//b为SpEl表达式结果存在a中，viewScope为作用域
+				<set name="viewScope.a" value="b"/>//与evaluate类似
+		流程数据作用域
+			conversationScope//最高级流程开始时创建，最高级流程结束时销毁，所有子流程共享
+			flowScope//流程开始时创建，流程结束时销毁，只有在创建他的流程中可见
+			requestScope//一个请求进入流程时创建，流程返回时销毁
+			flashScope//流程开始时创建，流程结束时销毁，视图状态渲染后也会销毁
+			viewScope//进入视图状态时创建，退出这个状态时销毁，只在视图状态内可见
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	

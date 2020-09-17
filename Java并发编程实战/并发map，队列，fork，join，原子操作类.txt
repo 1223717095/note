@@ -1,0 +1,146 @@
+ConcurrentHashMap
+	//并发中使用HashMap会引发死循环，使用synchronized保证线程安全的HashTable效率低下
+	//所以在并发中推荐使用ConcurrentHashMap
+	//ConcurrentHashMap使用锁分段技术（将数据分成几段，每一段一把锁）提升效率
+	
+	
+ConcurrentLinkedQueue
+	//非阻塞（循环CAS）
+	//基于链接节点的无界线程安全队列
+	
+阻塞队列
+	//如果队列为空，消费者会一直等待
+	ArrayBlockingQueue
+		数组结构有界阻塞队列
+	LinkedBlockingQueue
+		链表结构有界阻塞队列
+	LinkedTransferQueue
+		链表结构无界阻塞队列
+		//试图直接推送给等待中的消费者，没有才加入队列
+	LinkedBlockingDeque
+		链表结构的双向阻塞队列
+	SynchronousQueue
+		不存储元素的阻塞队列
+	PriorityBlockingQueue
+		支持优先级排序的有界阻塞队列
+		//默认情况下升序排列，自定义compareTo()方法来指定排列规则
+	DelayQueue
+		延迟执行的无界阻塞队列
+		
+		
+Fork/Join框架
+	//分割任务，执行并合并任务
+	
+	工作窃取算法
+		//每个线程执行该线程中的任务队列中的任务
+		//执行完自己任务队列中的任务后，窃取其他任务队列中的任务
+		//队列使用双端队列减少竞争
+		
+	ForkJoinTask
+		//一般继承他的子类
+			RecursiveAction 用于没有返回结果的任务
+			RecursiveTask<>   有返回结果
+	ForkJoinPool
+		//ForkJoinTask通过ForkJoinPool来执行
+
+	使用
+		public class CountTask extends RecursiveTask<Integer>{
+			private int start;
+			private int end;
+			private final static int THRESHOLD=2;
+
+			public CountTask(int start, int end) {
+				this.start = start;
+				this.end = end;
+			}
+			@Override
+			protected Integer compute() {
+				if(end-start<THRESHOLD){
+					int result=0;
+					for(int i=start;i<=end;i+=1){
+						result+=i;
+					}
+					return result;
+				}else{
+					CountTask c1=new CountTask(start,(start+end)/2);
+					CountTask c2=new CountTask((start+end)/2+1,end);
+					c1.fork();
+					c2.fork();
+					int result1=c1.join();
+					int result2=c2.join();
+					return result1+result2;
+				}
+			}
+			public static void main(String[] args) throws ExecutionException, InterruptedException {
+				ForkJoinPool pool=new ForkJoinPool();
+				CountTask countTask=new CountTask(1,4);
+				Future<Integer> future=pool.submit(countTask);
+				System.out.println(future.get());
+			}
+		}
+		
+		
+
+
+原子操作类
+	基本类型
+		AtomicBoolean
+		AtomicInteger
+		AtomicLong
+		
+			int addAndGet(int)以原子的方式加上输入值，返回结果
+			boolean compareAndSet(int expect,int update)CAS更新返回结果
+			int getAndIncrement()以原子方式自增，返回旧值
+			void lazySet(int) 将值设为输入值（其他线程可能会读到旧值！！！）
+			int getAndSet(int)将值设为输入值,返回旧值
+		
+		
+	数组
+		AtomicIntegerArray
+		AtomicLongArray
+		AtomicReferenceArray
+		
+			int addAndGet(int i,int date) 将索引为i的元素与date相加，并返回
+			boolean compareAndSet(int i,int expect,int update);CAS方式将值设为update
+			
+	引用类型
+		AtomicReference
+		AtomicReferenceFieldUpdater  //原子更新引用类型里的字段
+		AtomicMarkableReference      //原子更新带有标记位的引用类型
+		
+			AtomicReference<User> a=new AtomicReference<User>()
+			a.set(new User());
+			a.get()//得到自定义的user对象
+
+
+	原子更新字段类
+		AtomicIntegerFieldUpdater
+		AtomicLongFieldUpdate
+		AtomicStampedReference    //原子更新带有版本号的引用类型
+			
+			创建时.newupdater(User.class,"值的名称")
+			被更新字段必须为public volatile
+			
+			AtomicIntegerFieldUpdater a=AtomicIntegerFieldUpdater.newUpdater(Ttt.class,"a");
+			Ttt t=new Ttt(12);
+			a.addAndGet(t,10);
+			System.out.println(t.getA());
+			
+		
+
+
+
+
+
+
+
+
+
+
+		
+		
+		
+		
+		
+		
+		

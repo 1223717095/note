@@ -1,0 +1,185 @@
+申请运行时权限
+	先在AndroidManifest.xml声明权限
+ 	<uses-permission android:name="android.permission.CALL_PHONE"></uses-permission>
+	获取拨打电话的权限
+	public class MainActivity extends AppCompatActivity {
+
+    	@Override
+    	protected void onCreate(Bundle savedInstanceState) {
+        	super.onCreate(savedInstanceState);
+        	setContentView(R.layout.activity_main);
+        	Button makeCall = (Button) findViewById(R.id.make_call);
+        	makeCall.setOnClickListener(new View.OnClickListener() {
+            	@Override
+            	public void onClick(View v) {
+                	try {
+                    		if(ContextCompat.checkSelfPermission(MainActivity.this,Manifest.permission.CALL_PHONE)!=PackageManager.PERMISSION_GRANTED){//检测用户是否已授权
+                        		ActivityCompat.requestPermissions(MainActivity.this,new String[]{Manifest.permission.CALL_PHONE},1)//向用户申请权限回调onRequestPermissionsResult（）
+                    		}else{
+					call();
+	`			}
+                	} catch (SecurityException e) {
+                    		call();
+                	}
+            	}
+        	});
+    	}
+
+    	private void call() {
+        	try {
+            	Intent intent = new Intent(Intent.ACTION_CALL);
+            	intent.setData(Uri.parse("tel:10086"));
+            	startActivity(intent);
+        	} catch (SecurityException e) {
+            	e.printStackTrace();
+        	}
+    	}
+
+    	@Override
+    	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {//授权结果在grantResults中
+        	switch (requestCode) {
+            	case 1:
+                	if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    		call();
+                	} else {
+                    		Toast.makeText(this, "You denied the permission", Toast.LENGTH_SHORT).show();
+                	}
+                	break;
+            		default:
+        	}
+    	}
+	}
+
+
+
+使用ContextResolver访问其他程序中的数据
+	创建uri对象(前面部分为包名，后面为表名)
+	Uri uri =Uri.parse("content://com.example.app.provider/table")
+	查询
+	Cursor cursor=getContentResolver().query(
+		uri,
+		column1(要查询的列名),
+		select（where），
+		args(填充where里的占位符),
+		order);
+	cursor.moveToNext().get
+	添加
+	ContentValues values=new ContentValues();
+	values.put("column1",1);
+	values.put("column2",2);
+	getContentResolver().insert(uri,values);
+	更新
+	ContentValues values=new ContentValues();
+	values.put("column1",3);
+	getContentResolver().updata(uri,values,"column1=?",new String[]{"1"});
+	删除
+	getContentResolver().delect(uri,"column1=?",new String[]{"1"});
+
+
+读取联系人
+	<uses-permission android:name="android.permission.READ_CONTACTS" />
+
+
+创建自己的内容提供器
+	public class MyProvider extends ContentProvider{
+		@Override//只有当ContentResolver尝试访问数据时才初始化，返回是否调用成功
+		public boolean onCreate(){
+			return false;
+		}
+
+		@Override//查询数据uri确定查询那张表，projection查询列，selection和selectionArgs查询的约束条件，sortOrder结果排序
+		public Cursor query(Uri uri,String[] projection,String selection,String[] selectionArgs,String sortOrder){
+			return false;//结果存放在Cursor返回
+		}
+		
+		@Override//添加数据
+		public Uri insert(Uri uri,ContentValues values){
+			return null;
+		}
+
+		@Override//更新数据
+		public int update(Uri uri,ContentValues values,String selection,String[] selectionArgs){
+			return 0;
+		{
+
+		@Override//删除数据
+		public int delect(Uri uri,String selection,String[] selectionArgs){
+			return 0;
+		{
+
+		@Override//传入uri返回对应的MIME类型
+		public String getType(Uri uri){
+			return null;
+		{
+	{
+
+MIME
+	如果uri以路径结尾则前面加vnd.android.cursor.dir/
+	如果uri以id结尾则前面加vnd.android.cursor.item/
+	后面接vnd.路径
+	例如uri:conntent://comexample.app.provider/table1/1
+	MIME:vnd.android.cursor.item/vnd.comexample.app.provider.table1
+
+Uri用来指定访问哪张表也可以
+	uri/1   访问表中id为1的数据
+
+通配符
+	*匹配任意长度字符//用于匹配表明
+	#匹配任意藏毒数字//用于匹配id
+	
+添加到上面代码
+	public static final int TABLE1_DIR=0;
+	public static final int TABLE1_ITEM=1;
+	private static UriMatcher uriMatcher
+	static{
+		uriMatcher=new UriMatcher(UriMatcher.NO_MATCH);
+		uriMatcher.addURI("com.example.app.provider","table1",TABLE1_DIR);
+		uriMatcher.addURI("com.example.app.provider","table1/#",TABLE1_DIR);
+	}
+	@Override
+	public Cursor query(Uri uri,String[] projection,String selection,String[] selectionArgs,String sortOrder){
+		switch(uriMatcher.match(uri)){
+		case TABLE1_DIR:
+			//查询逻辑
+			break;
+		case TABLE1_ITEM:
+			//查询逻辑
+			break;
+	}
+	
+	@Override
+    	public String getType(Uri uri) {
+        switch (uriMatcher.match(uri)) {
+            case BOOK_DIR:
+                return "vnd.android.cursor.dir/vnd.com.example.databasetest. provider.book";
+            case BOOK_ITEM:
+                return "vnd.android.cursor.item/vnd.com.example.databasetest. provider.book";
+            case CATEGORY_DIR:
+                return "vnd.android.cursor.dir/vnd.com.example.databasetest. provider.category";
+            case CATEGORY_ITEM:
+                return "vnd.android.cursor.item/vnd.com.example.databasetest. provider.category";
+        }
+        return null;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

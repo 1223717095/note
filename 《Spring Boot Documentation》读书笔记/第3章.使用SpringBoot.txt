@@ -1,0 +1,38 @@
+典型的文件布局方式
+com
+ +- example
+     +- myapplication
+         +- Application.java
+         |
+         +- customer
+         |   +- Customer.java
+         |   +- CustomerController.java
+         |   +- CustomerService.java
+         |   +- CustomerRepository.java
+         |
+         +- order
+             +- Order.java
+             +- OrderController.java
+             +- OrderService.java
+             +- OrderRepository.java
+			 
+Application为启动SpringBoot的主方法
+	@SpringBootApplication
+	public class Application {
+
+		public static void main(String[] args) {
+			SpringApplication.run(Application.class, args);
+		}
+
+	}
+	
+@SpringBootApplication注解包括了
+	@EnableAutoConfiguration：启用Spring Boot的自动配置机制   exclude = {DataSourceAutoConfiguration.class}禁用特定的配置类
+	@ComponentScan：在应用程序所在的包上启用扫描（请参阅最佳做法）
+	@Configuration：标识一个配置类
+	
+@Configuration标识一个配置类
+	@Import导入其他配置类
+	@ImportResource导入xml配置
+	
+@Autowired依赖注入	

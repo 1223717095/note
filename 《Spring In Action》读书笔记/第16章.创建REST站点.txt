@@ -1,0 +1,16 @@
+使用json需要导入jackson-annotations,jackson-core,jackson-databind包
+
+使用http消息转换器//控制器类上使用@RestController或在方法上使用@ResponseBody
+	使用@ResponseBody将返回对象作为资源发送到客户端
+	//DispatcherService会考虑请求头中的Accept信息，查找相应的消息转换器
+	例如：在控制器方法
+		public @ResponseBody List home() {
+			List<String> a=new ArrayList<>();
+			a.add("q");
+			return a;//返回视图名称，进入DispatcherServlet中的视图名称解析器
+		}
+		
+	限制控制器方法只处理请求头Accept为“application/json”
+		@RequestMapping(method=RequestMethod.GET,produces = "application/json")
+		
+	

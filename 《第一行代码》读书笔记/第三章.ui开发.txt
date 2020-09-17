@@ -1,0 +1,301 @@
+常用控件
+	TextView
+	<TextView
+            android:id="@+id/response_text"//唯一标识符
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" 
+	    android:gravity="center"//居中对齐可以用|指示多个值
+	    android:textSize="24sp"
+            android:textColor="#00ff00"
+            android:text="text"/>//内容
+	
+	Button
+	<Button
+        	android:id="@+id/button"
+        	android:layout_width="match_parent"
+        	android:layout_height="wrap_content"
+        	android:text="button" //显示结果为全大写用textAllCaps="false"取消
+		android:textAllCaps="false"
+		/>
+	button监听事件
+	Button button=findViewById(R.id.button);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                
+            }
+        });
+	
+
+	EditText输入框
+	<EditText
+        	android:id="@+id/edit_text"
+        	android:layout_width="match_parent"
+        	android:layout_height="wrap_content"
+        	android:hint="input something"//提示文本
+        	android:maxLines="2"/>//最大行数
+	得到输入框内容
+	EditText editText=(EditText)findViewById(R.id.edit_text);
+    	editText.getText().toString();
+
+
+	ImageView显示图片
+	<ImageView
+       		android:id="@+id/imageView"
+        	android:layout_width="match_parent"
+        	android:layout_height="wrap_content" 
+        	android:src="@drawable/im_1"/>
+	改变图片
+	ImageView imageView=(ImageView)findViewById(R.id.imageview);
+    	imageView.setImageResource(R.drawable.im_1);
+
+	
+	ProgressBar进度条
+	<ProgressBar
+            android:id="@+id/progressbar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" 
+	    style="?android:attr/progressBarStyleHorizontal"//改变样式
+            android:max="100"/>//设置最大值在代码中动态修改进度setProgress(10)
+	控件的可见性android:visibility
+		visiblt可见的（默认值）
+		invisible不可见但仍占用位置
+		gone不可见但且不占用位置
+	调用setVisibility()传入View.VISIBLE,ViewINVISIBLE,View.GONE设置
+
+	AlertDialod弹出一个对话框在所有界面元素之上
+
+		AlertDialog.Builder dialog=new AlertDialog.Builder(MainActivity.this);
+                dialog.setTitle("this is dialog");
+                dialog.setMessage("something");
+                dialog.setCancelable(false);//是否能用back键关闭
+                dialog.setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        
+                    }
+                });
+                dialog.setPositiveButton("cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+
+                    }
+                });
+                dialog.show();
+	
+	ProgressDialog类似AlertDialod是一个进度条强行让用户等待
+	 	ProgressDialog progressDialog = new ProgressDialog(MainActivity.this);
+                progressDialog.setTitle("This is ProgressDialog");
+                progressDialog.setMessage("Loading...");
+                progressDialog.setCancelable(true);
+                progressDialog.show();
+
+
+
+
+
+
+
+
+4种基本布局
+	线性布局
+	<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    		android:orientation="vertical"//垂直方向排序horizontal水平
+    		android:layout_width="match_parent"
+    		android:layout_height="match_parent">
+	</LinearLayout>
+	
+	在控件中添加android:layout_gravity="top"设置控件在布局中的对齐方式
+	垂直布局只有水平方向上的对齐有效
+	
+	在控件中添加android:layout_weight="1"通过比例来指定控件大小layout_width设置为0dp
+
+
+
+	相对布局
+	<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    		android:layout_width="match_parent"
+    		android:layout_height="match_parent">
+	</RelativeLayout>
+	
+	（相对于父布局）在控件中使控件和父布局的左上角对齐
+	android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+
+	（相对于其他控件）
+	android:layout_above="@+id/button1"
+        android:layout_below="@+id/button1"
+        android:layout_toLeftOf="@+id/button1"
+	android:layout_alignLeft="@+id/"//控件的左边缘于另一个控件的左边缘对齐
+
+
+
+	帧布局(所有控件默认摆放在左上角，用处较少)
+	<FrameLayout>
+
+	百分比布局
+	在app/build.gradle中的dependencies中
+	compile 'com.android.support:percent:24.2.1'
+	<android.support.percent.ParcentFrameLayout
+		xmlns:android="http://schemas.android.com/apk/res/android"
+		xmlns:app="http://schemas.android.com/apk/res_auto"//定义app命名空间
+
+	在控件中
+	app:layout_widthPercent="50%"//宽度为布局的%50
+	
+	
+
+
+控件都是直接或间接的继承自View
+布局都是直接或间接的继承自ViewGroup
+
+引入布局
+	<include layout="@layout/title">//title为在layout文件夹中的自定义布局
+
+
+自定义控件
+	先自定义布局然后在自定义控件中添加布局
+	自定义控件
+	public class TitleLayout extends LinearLayout {
+    		public TitleLayout(Context context, AttributeSet attrs) {
+        		super(context, attrs);
+        		LayoutInflater.from(context).inflate(R.layout.title, this);//title为自定义布局
+        		Button titleBack = (Button) findViewById(R.id.title_back);
+        		Button titleEdit = (Button) findViewById(R.id.title_edit);
+        		titleBack.setOnClickListener(new OnClickListener() {
+            			@Override
+            			public void onClick(View v) {
+                			((Activity) getContext()).finish();
+           			}
+        		});
+        		titleEdit.setOnClickListener(new OnClickListener() {
+            		@Override
+            		public void onClick(View v) {
+                		Toast.makeText(getContext(), "You clicked Edit button",
+                        	Toast.LENGTH_SHORT).show();
+            		}
+        	});
+    	}
+
+	}
+
+使用自定义控件
+	<com.example.Mylayout
+		android:layout_width=""/>
+
+
+滚动控件RecycleView
+	创建一个类继承自RecyclerView.Adapter<FruitAdapter.ViewHolder>//FruitAdapter.ViewHolder是自定义类中的一个内部类
+	public class FruitAdapter extends RecyclerView.Adapter<FruitAdapter.ViewHolder>{
+
+    private List<Fruit> mFruitList;
+
+    static class ViewHolder extends RecyclerView.ViewHolder {
+        View fruitView;
+        ImageView fruitImage;
+        TextView fruitName;
+
+        public ViewHolder(View view) {
+            super(view);
+            fruitView = view;
+            fruitImage = (ImageView) view.findViewById(R.id.fruit_image);
+            fruitName = (TextView) view.findViewById(R.id.fruit_name);
+        }
+    }
+
+    public FruitAdapter(List<Fruit> fruitList) {
+        mFruitList = fruitList;
+    }
+
+    @Override
+    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fruit_item, parent, false);
+        final ViewHolder holder = new ViewHolder(view);
+
+        holder.fruitView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int position = holder.getAdapterPosition();
+                Fruit fruit = mFruitList.get(position);
+                Toast.makeText(v.getContext(), "you clicked view " + fruit.getName(), Toast.LENGTH_SHORT).show();
+            }
+        });
+        holder.fruitImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int position = holder.getAdapterPosition();
+                Fruit fruit = mFruitList.get(position);
+                Toast.makeText(v.getContext(), "you clicked image " + fruit.getName(), Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        return holder;
+    }
+
+    @Override
+    public void onBindViewHolder(ViewHolder holder, int position) {
+        Fruit fruit = mFruitList.get(position);
+        holder.fruitImage.setImageResource(fruit.getImageId());
+        holder.fruitName.setText(fruit.getName());
+    }
+
+    @Override
+    public int getItemCount() {
+        return mFruitList.size();
+    }
+
+}
+
+	使用RecycleView
+	initFruits();//初始化数据
+        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(layoutManager);
+        FruitAdapter adapter = new FruitAdapter(fruitList);
+        recyclerView.setAdapter(adapter);
+
+
+
+ListView(允许以滑动的方式查看屏幕外的内容)
+	<ListView
+        	android:id="@+id/list_view"
+        	android:layout_width="match_parent"
+        	android:layout_height="match_parent" >
+    	</ListView>
+	 FruitAdapter adapter = new ArrayAdapter<String>(MainActivity.this, android.R.layout.simple_list_item_1, data(String数组));//android.R.layout.simple_list_item_1安卓一个内置布局里面有一个TextView
+        ListView listView = (ListView) findViewById(R.id.list_view);
+        listView.setAdapter(adapter);
+
+ListView点击事件
+	listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view,
+                                        int position, long id) {
+                    Fruit fruit = fruitList.get(position);
+                    Toast.makeText(MainActivity.this, fruit.getName(), Toast.LENGTH_SHORT).show();
+                }
+            });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

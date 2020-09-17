@@ -1,0 +1,27 @@
+反射
+	Class类
+		获取Class类的3种方法
+			e.getClass();//e为一个实例
+			Class.forName("ClassName");
+			类型.class
+		Class类的方法
+			String getName();//返回实例的类名
+			
+			Field[] getFields();//返回这个类或其超类的公有域
+			Field[] getDeclaredFields();//返回全部域
+				//Field对象方法
+				Class getDeclaringClass();//返回Class对象
+				get();//f.get(obj);f为Field类型obj为包含f域的对象，返回obj中f域的值（如果不是公有域会抛出异常，调用f.setAccessible(true)解除安全管理器的控制）
+				set(,value);//对应于上面的get  f.set(obj,value)
+			
+			Method[] getMethods();//返回全部方法包括继承的方法
+			Method[] getDeclaredMethod();//返回全部方法不包括继承的方法
+				Class getDeclaringClass();//返回Class对象
+			
+			Constructor[] getConstructor();//返回全部公有构造方法
+			Constructor[] getDeclaredConstructor();//返回全部构造方法
+				Class getDeclaringClass();//返回Class对象
+		可用于检查实例是否为同一个类
+			a.getClass()==b.getClass()
+		可用于创建实例
+			e.getClass().newInstance();//创建与e具有相同类型的实例

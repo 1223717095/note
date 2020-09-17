@@ -1,0 +1,210 @@
+一个活动包含
+	activity.java和res/layout下的布局文件.xml
+	还需要再AndroidManifest.xml的<application>中注册
+		<activity android:name".FistActivity"></activity>
+	配置主活动
+		<intent-filter>
+                	<action android:name="android.intent.action.MAIN" />
+                	<category android:name="android.intent.category.LAUNCHER" />
+            	</intent-filter>
+
+
+使用Toast显示提醒
+	Toas.makeText(FistActivity.this,"需要显示的内容",Toast.LENGTH_SHORT).show();//参数Context,"",Toast.LENGTH_SHORT/Toast.LENGTH_LONG
+
+
+在活动中使用Menu
+	在res目录下新建一个meun的文件夹然后new->Menu resuoce file
+	<?xml version="1.0" encoding="utf-8"?>
+	<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    		<item
+        		android:id="@+id/add_item"
+        		android:title="Add"/>
+    		<item
+        		android:id="@+id/remove_item"
+        		android:title="Remove"/>
+	</menu>
+	
+	显示-在Activity中重写onCreateOptionsMenu()
+	@Override
+    	public boolean onCreateOptionsMenu(Menu menu) {
+        	getMenuInflater().inflate(R.menu.main, menu);
+        	return true;
+    	}
+
+	菜单响应重写onOptionsItemSelected()
+	@Override
+    	public boolean onOptionsItemSelected(MenuItem item) {
+        	switch (item.getItemId()) {
+            	case R.id.add_item:
+                	Toast.makeText(this, "You clicked Add", Toast.LENGTH_SHORT).show();
+                	break;
+            	case R.id.remove_item:
+                	Toast.makeText(this, "You clicked Remove", Toast.LENGTH_SHORT).show();
+                	break;
+            	default:
+        	}
+        	return true;
+    	}
+
+	销毁活动
+	finish();
+
+使用intent在活动之间移动
+	显式Intent
+
+	Button button1 = (Button) findViewById(R.id.button_1);
+        button1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(FirstActivity.this, SecondActivity.class);
+                startActivity(intent);
+            }
+        });
+
+	隐式Intent
+	利用action,category(在AndroidManifest.xml中)
+	<activity
+            android:name=".SecondActivity">
+            <intent-filter>
+                <action android:name="com.example.activitytest.ACTION_START" />
+                <category android:name="android.intent.category.DEFAULT" />//默认的category
+                <category android:name="com.example.activitytest.MY_CATEGORY" />
+            </intent-filter>
+        </activity>
+
+	Button button1 = (Button) findViewById(R.id.button_1);
+        button1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent("com.example.activitytest.ACTION_START");//自动添加默认category
+		intent.addCategory("com.example.activitytest.MY_CATEGORY")
+                startActivity(intent);
+            }
+        });
+
+	更多隐式Intent用法
+	打开浏览器
+	在AndroidManifest.xml中<intent-filter>
+	<data android:scheme="http">//tell拨打电话，geo显示地理信息
+	与下面的setDate()对应 android:scheme数据的协议，:host数据的主机名，:port数据的端口,:path跟在host和port后面的部分,:mimeType指定可以处理的数据类型允许通配符
+	Button button1 = (Button) findViewById(R.id.button_1);
+        button1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Intent.ACTION_VIEW);//自动添加默认category
+		intent.setData(Uri.parse("http://www.baidu.com"));
+                startActivity(intent);
+            }
+        });
+	
+	打开拨号界面
+	Button button1 = (Button) findViewById(R.id.button_1);
+        button1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Intent.ACTION_VIEW);//自动添加默认category
+		intent.setData(Uri.parse("tell:10086"));
+                startActivity(intent);
+            }
+        });
+	
+
+传递数据到下一个活动
+	Intent intent=new Intent(FirstActivity.this,SecondActive.class);
+	intent.putExtra("extra_data","aaa");
+	startActivity(intent);
+	在下一个活动中
+	intent.getStringExtra("extra_data");	
+
+返回数据给上一个活动
+	使用startActivityForResult启动下一个活动
+	startActivityForResult(intent,1);//第二个参数时请求码确保值唯一就行，用于回调中判断数据来源
+	在下一个活动中
+	intent.putExtra("extra_data","aaa");
+	setResult(RESULT_OK,intent);//第一个参数还有RESULT_CANCELED
+	finish();//结束活动
+	结束后会回调上一个活动的onActivityResult()
+	@Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {//requestCode请求码，resultCode处理结果RESULT_CANCELED或RESULT_OK，
+        switch (requestCode) {
+            case 1:
+                if (resultCode == RESULT_OK) {
+                    String returnedData = data.getStringExtra("data_return");
+                    Log.d("FirstActivity", returnedData);
+                }
+                break;
+            default:
+        }
+    }
+	
+
+当点击back退出活动时调用
+	@Override
+    	public void onBackPressed() {
+	}
+
+
+活动状态
+	运行状态
+	暂停状态（不是栈顶但仍然可见）
+	停止状态（不可见，临时数据可能会被回收）
+	销毁状态
+
+
+活动的生命期
+	onCreate()以一次创建的时候调用
+	onDestroy()活动销毁时调用
+	onStart()由不可见变为可见（不一定时栈顶）
+	onStop()由可见（不一定时栈顶）变为不可见
+	onResume()变为栈顶时
+	onPause()变为不是栈顶时
+	onRestart()由停止状态（不是栈顶且不可见）变为运行状态
+	
+
+活动回收前保存临时数据
+	onSaveInstanceState()会保证活动被回收之前一定调用这一函数
+	@Override
+	protected void onSaveInstanceState(Bundle outState){//outState用于存储临时数据
+		super.onSaveInstanceState(outState);
+		outState.putString("data_key","data");
+	}
+	活动回收之后相当于销毁重新启动调用onCreate()
+	@Override
+    	protected void onCreate(Bundle savedInstanceState) {//savedInstanceState就是之前保存的临时数据
+		super.onCreate(savedInstanceState);
+        	setContentView(R.layout.second_layout);
+		if(savedInstanceState!=null){
+			String data=savedInstanceState.getString("data_key");
+		}
+		
+
+活动的启动模式(standard，singleTop,singleTask,singleInstanc)
+	在AndroidManifest.xml的<activity>设置启动模式
+	android:launchMode="singleTop"
+	
+
+standard(默认启动模式)
+	不论如何都会创建新的活动
+	
+singleTop
+	如果该活动在栈顶就不会创建一个新的该活动
+
+singleTask
+	使这个活动在整个应用程序上下文只有一个实例
+	如果在栈中发现该活动则在在这个活动前面的所有活动全部出栈（调用onDestroy()）该函数调用onRestart()
+
+singleInstanc
+	返回一个新的栈来管理这个活动
+	getTaskId()//返回栈的id
+
+
+
+
+
+
+
+
+
+
+

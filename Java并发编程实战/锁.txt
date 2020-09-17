@@ -1,0 +1,107 @@
+Lock
+	lock.lock();//不要在try语句中获取锁
+	try{
+		
+	}final{
+		lock.unlock();//在final语句块中释放锁
+	}	
+	
+	//Lock可以响应中断（获取锁的线程被中断时抛出中断异常，同时释放锁）
+	//synchronized不能响应中断
+
+	
+队列同步器（AbstractQueuedSynchronizer//AQS）	
+	//是构建锁或其他同步组件的框架
+	获取状态失败的线程会加入同步队列的尾部并自旋等待
+	头节点状态的释放会唤醒后继节点
+
+
+	
+公平锁：先对锁进行获取的请求一定先被满足	
+	//公平锁保证了锁的获取按照FIFO原则，代价是：频繁的线程切换带来巨大的时间消耗
+	//默认为非公平锁
+	
+	
+重入锁（ReentrantLock）
+	//默认为非公平锁
+	//同个线程可以对一个资源重复加锁
+	//synchronized支持隐式的重进入
+
+	
+读写锁（ReentrantReadWriteLock）
+	//在同一时刻允许多个读线程访问
+	//写线程访问时，其他线程都会被阻塞
+	
+	private ReentrantReadWriteLock lock= new ReentrantReadWriteLock();
+    Lock r=lock.readLock();
+    Lock w=lock.writeLock();
+	
+	//getReadLockCount()返回获取读锁的次数
+	//getReadHoldCount()返回当前线程获取读锁的次数
+	//isWriteLocked()判断写锁是否被获取
+	//getWriteHoldCount()返回当前线程写锁被获取次数
+	
+	
+LockSupport
+	//也是构建 同步组件的基础工具
+	//用于阻塞和唤醒线程
+	
+	
+Condition
+	//条件对象与Lock配合使用
+	//Lock lock =new ReentrantLock();
+    //Condition produceCon =lock.newCondition();
+	
+	调用await()时会从同步队列中移动到等待队列
+	调用singal()时会将等待队列中等待时间最长的节点移动到同步队列
+	
+
+线程同步方法
+		1.synchronized配合wait(),notify(),notifyAll()
+		2.Lock配合Condition的await(),signal(),signalAll()
+		3.CountDownLatch
+			//一个线程等待其他指定数量的线程发出信号，在执行
+		
+		
+		
+		CountDownLatch
+		//适用于一个线程等待其他线程执行完
+			构造函数传入int指定计数器
+			.countDown()增加计数器
+			.await()阻塞等待计数器到达指定数值
+			
+		
+		CyclieBarrier
+		//一组线程准备好同时运行
+			构造函数传入int指定调用await()阻塞的线程数量
+			.await()阻塞等待其他线程准备好
+			
+		
+		
+		
+Semaphore
+	//构造函数传入int指定同时获得允许的线程个数
+	得到允许acquire()
+	释放许可release()
+			//使用场景，8个工人5台机器
+		
+		
+		
+
+Synchronized与Lock对比
+	Synchronized是JVM级别的（JVM提供很多锁优化），Lock是api级别的
+	
+	Synchronized抛出异常时会自动释放锁，Lock需要在final中unlock
+	
+	Synchronized缺点
+		不能响应中断（不能调用interrupt来停止等待）
+		同一时刻不管读或写都只有一个线程占有锁
+		
+		
+		
+		
+		
+		
+	
+	
+		

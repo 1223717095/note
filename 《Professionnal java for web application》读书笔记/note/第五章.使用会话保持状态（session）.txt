@@ -1,0 +1,75 @@
+将会话id返回到浏览器的方式
+	cookie
+	url重写
+
+cookie特性
+	Domain告诉浏览器将cookie发送到哪个域名
+	Path进一步限制到某个url
+	Expires定义了cookie的绝对过期时间
+	Max-Age于上一个互斥表示过期前所需的秒数（如果不含这2个则关闭浏览器过期）
+	Secure(不需要有值)只通过https发送
+	HttpOnly将限制在浏览器中使用js,flash无法获取cookie
+	sessionId的默认名字为JSESSIONID
+
+在部署描述符中配置会话（web.xml）
+	<session-config>
+        	<session-timeout>30</session-timeout>
+        	<cookie-config>
+            		<http-only>true</http-only>
+        	</cookie-config>
+        	<tracking-mode>COOKIE</tracking-mode>
+    	</session-config>
+
+在session中存储数据
+	HttpSession session = request.getSession();
+        if(session.getAttribute("cart") == null)
+            session.setAttribute("cart", new Hashtable<Integer, Integer>());
+
+从session删除数据
+	request.getSession().removeAttribute("cart");
+
+注销session
+	session.invalidate();
+
+
+使用会话监听器监听会话
+注册监听器
+	@WebListener
+	public class SessionListener implements HttpSessionListener, HttpSessionIdListener{
+	}
+	或者在部署描述符中注册
+	<listener>
+		<listener-class>com.wrox.SessionListener</listener-class>
+	</listener>
+
+会话监听器的使用
+	@Override
+   	public void sessionCreated(HttpSessionEvent e)//创建新session时调用
+    	{
+        	System.out.println(this.date() + ": Session " + e.getSession().getId() +" created.");
+        	SessionRegistry.addSession(e.getSession());
+    	}
+	@Override
+    	public void sessionDestroyed(HttpSessionEvent e)//会话销毁时调用
+    	{
+        	System.out.println(this.date() + ": Session " + e.getSession().getId() +" destroyed.");
+        	SessionRegistry.removeSession(e.getSession());
+    	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

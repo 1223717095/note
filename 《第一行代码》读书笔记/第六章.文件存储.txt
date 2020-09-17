@@ -1,0 +1,259 @@
+Android提供3种持久化技术
+	文件存储，SharedPreference存储，SQLite数据库存储
+
+文件存储
+	FileOutputStream out=openFileOutput("data", Context.MODE_APPEND);
+	//MODE_PRIVATE默认操作模式文件存在时覆盖 MODE_APPEND文件存在时追加，不存在新建
+        BufferedWriter writer=new BufferedWriter(new OutputStreamWriter(out));
+        writer.write("111");
+
+从文件中读取数据
+	    FileInputStream in=openFileInput("data");
+            BufferedReader reader=new BufferedReader(new InputStreamReader(in));
+            String line=null;
+            while((line=reader.readLine())!=null){
+                System.out.println(line);
+            }
+
+SharedPreference存储（通过键值对存取）
+	SharedPreferences.Editor editor=getSharedPreferences("data",MODE_PRIVATE).edit();
+        editor.putString("name","tom");
+        editor.apply();//提交
+
+SharedPreference读取
+	SharedPreferences pref=getSharedPreferences("data",MODE_PRIVATE);
+        String name=pref.getString("name","");
+
+
+
+
+SQLite数据库（如果初始化函数传入的数据库名已存在则不会在调用onCreate方法）
+    public class MyDatabaseHelper extends SQLiteOpenHelper {//继承抽象类SQLiteOpenHelper
+    public static final String CREATE_BOOK = "create table Book ("
+            + "id integer primary key autoincrement, "
+            + "author text, "
+            + "price real, "
+            + "pages integer, "
+            + "name text)";
+
+    public static final String CREATE_CATEGORY = "create table Category ("
+            + "id integer primary key autoincrement, "
+            + "category_name text, "
+            + "category_code integer)";
+
+    private Context mContext;
+
+    public MyDatabaseHelper(Context context, String name,
+                            SQLiteDatabase.CursorFactory factory, int version) {//context传入this,name数据库名，factory查询时放回一个自定义Cursor一般传入null,version当前数据库版本号（自定义）用于升级（传入一个比之前版本号大的书就会调用onUpgrade）
+        super(context, name, factory, version);
+        mContext = context;
+    }
+
+    @Override
+    public void onCreate(SQLiteDatabase db) {
+        db.execSQL(CREATE_BOOK);//执行sql语句
+        db.execSQL(CREATE_CATEGORY);
+        Toast.makeText(mContext, "Create succeeded", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {//升级数据库
+        db.execSQL("drop table if exists Book");
+        db.execSQL("drop table if exists Category");
+        onCreate(db);
+    }
+
+}
+
+
+SQLite添加数据
+		SQLiteDatabase db = dbHelper.getWritableDatabase();
+                ContentValues values = new ContentValues();
+                // 开始组装第一条数据
+                values.put("name", "The Da Vinci Code");
+                values.put("author", "Dan Brown");
+                values.put("pages", 454);
+                values.put("price", 16.96);
+                db.insert("Book", null, values); // 插入第一条数据 表名，null,数添加的数据
+                values.clear();//清除values
+
+
+SQLite更新数据
+		SQLiteDatabase db = dbHelper.getWritableDatabase();
+                ContentValues values = new ContentValues();
+                values.put("price", 10.99);
+                db.update("Book", values, "name = ?", new String[] { "The Da Vinci Code" });
+		表名，更新的数据，相当于where字段？为占位符，前面？的值
+
+
+SQLite删除数据
+		SQLiteDatabase db = dbHelper.getWritableDatabase();
+                db.delete("Book", "pages > ?", new String[] { "500" });
+
+
+
+SQLite查询数据
+		SQLiteDatabase db = dbHelper.getWritableDatabase();
+                // 查询Book表中所有的数据
+                Cursor cursor = db.query("Book", null, null, null, null, null, null);
+		//query（）参数table表名，columns查询列名null为全部，selection指定where,selectionArgs为where占位符提供值，groupby,having对groupby结果约束，orderby排序
+                if (cursor.moveToFirst()) {
+                    do {
+                        // 遍历Cursor对象，取出数据并打印
+                        String name = cursor.getString(cursor.getColumnIndex("name"));
+                        String author = cursor.getString(cursor.getColumnIndex("author"));
+                        int pages = cursor.getInt(cursor.getColumnIndex("pages"));
+                        double price = cursor.getDouble(cursor.getColumnIndex("price"));
+                        Log.d("MainActivity", "book name is " + name);
+                        Log.d("MainActivity", "book author is " + author);
+                        Log.d("MainActivity", "book pages is " + pages);
+                        Log.d("MainActivity", "book price is " + price);
+                    } while (cursor.moveToNext());
+
+
+直接使用SQL语句执行
+	添加，更新，删除都用execSQL
+	db.execSQL("insert into Book values(?,?,?,)",new String[]{"a","b","c"})
+	
+
+使用LitePal操作数据库
+	
+引入LitePal
+	在app/build.gradel的depandencies闭包中添加
+ 	compile 'org.litepal.android:core:1.3.2'
+
+配置LitePal
+	在app/src/main新建assets目录在此目录下新建litepal.xml
+	<?xml version="1.0" encoding="utf-8"?>
+	<litepal>
+    		<dbname value="BookStore" ></dbname>//用于指定数据库名称
+
+    		<version value="2" ></version>//版本号
+
+    		<list>//用于指定映射模型
+        		<mapping class="com.example.litepaltest.Book"></mapping>
+        		<mapping class="com.example.litepaltest.Category"></mapping>
+    		</list>
+	</litepal>
+
+	在AndroidManifest.xml中的Application添加android:name="org.litepal.LitePalApplication"
+
+
+
+LitePal创建数据库
+	先创建一个类继承自DataSupport（每个字段对应的set和get）
+	public class Book extends DataSupport {
+
+    	private int id;
+
+    	public int getId() {
+        	return id;
+    	}
+
+    	public void setId(int id) {
+        	this.id = id;
+    	}
+	
+	}
+	在litepal.xml的<list>添加
+		<mapping class="com.example.litepaltest.Book"></mapping>
+	现在只要任意操作一次数据库(例如LitePal.getDatabase)就会创建BookStore.db
+
+LitePal升级数据库
+	修改book类然后在litepal.xml版本号加1
+
+
+LitePal添加数据
+	新建book类实例添加值后book.save
+
+LitePal更新数据
+	方法1
+		1.修改值然后.sava
+		book.save()
+		book.setid()
+		book.save()
+		2.使用book.updateAll()
+		new book
+		book.setid()
+		book.updateAll("name = ? and author =?","a","b")约束条件如不指定更新全部
+		不能更新为默认值例如null,0
+			使用book.setToDefault("id")
+			book.updateAll()
+	
+
+
+
+LitePa删除数据
+	DataSupport.delectAll(Book.class,"price < ?","15")约束条件如不指定删除全部
+
+LitePa查询数据
+	查询全部
+	List<Book> books =DataSupport.findAll(Book.class)
+	select
+	List<Book> books =DataSupport.select("name","id").find(Book.class)
+	where
+	List<Book> books =DataSupport.where("page > ?","4").find(Book.class)
+	order
+	List<Book> books =DataSupport.order("price desc").find(Book.class)
+	limit查询结果数量
+	List<Book> books =DataSupport.limit(3).find(Book.class)
+	offset偏移量
+	List<Book> books =DataSupport.limit(3).offset(1).find(Book.class)//查询第234条数据
+利用SQL语句查询
+	DataSupport.findBySQL("")返回Cursor
+
+
+
+
+利用adb查询手机数据库
+	在cmd中 adb shell
+	cd data/data/com.example.databasetext/databases
+	ls查看有什么数据库
+	sqlite3 BookStore.db进入数据库
+	.table显示全部表
+	.schema查看建表语句
+	执行sql语句
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

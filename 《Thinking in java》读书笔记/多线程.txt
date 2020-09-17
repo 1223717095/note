@@ -1,0 +1,127 @@
+Thread.sleep(long millis)//休眠给定的毫秒数
+创建新的线程
+	实现Runnable接口（重写其中的run方法）
+	Runnable r=new MyRunnable();
+	Thread t=new Thread(r);
+	r.start();
+
+中断进程
+	进程的interrupt()方法会将进程中的中断标志位置为true（不会中断）
+	自定义的线程应该时常检测该位置
+	获取当前进程
+		Thread.currentThread()
+	检查中断状态标志位
+		Thread.currentThread().isInterrupted()
+		一个被阻塞（sleep或wait）的线程调用interrupt()时，阻塞会异常中断
+		
+线程状态
+	New//新创建
+	Runnable//可运行
+	Blocked//被阻塞  //锁
+	Waiting//等待
+	Timed waiting//计时等待
+	Terminated//被终止
+	
+	Thread的方法
+		void join()//等待该线程运行完（加参数Long millis 等待指定毫秒数）
+		Thread.State getState()//返回线程的状态
+		
+		
+线程优先级
+	默认继承父线程的优先级
+	void setPriority(int a)//设置优先级1-10
+	
+	
+	
+守护线程
+	//为其他线程提供服务，如果只剩下守护线程程序就推出了
+	//应该永远不去访问固有资源
+	void setDaemon(boolean a)//true标识为守护进程，必须在线程启动前调用
+		
+	
+	
+锁对象
+	在类中
+	private Lock bankLock=new ReentrantLock();//创建一个可重入锁
+	
+	public void a(){
+		try{
+			bankLock.lock();//获取锁，如果已被获取会阻塞
+			...
+		}finally{
+			bankLock.unlock();释放锁一定要放在finally语句块里
+		}	
+	//同一时间内只有一个线程可以执行该方法
+	
+	
+	
+条件对象---和Lock配合使用
+	在类中
+		private Condition suff=new bankLock.newCondition();//创建一个该锁相关的条件对象，bankLock为一个自定义的锁对象
+	在获取锁后
+		suff.await();//阻塞当前线程，放弃锁，
+		//该线程只能等待其他线程调用suff.signalAll()激活
+		// signal()	从该条件的等待池中随机地选择一个线程，解除其阻塞状态（对应notify()方法）
+		
+		
+对象内部锁//使用synchronized关键字调用
+	每个对象都有内部锁和一个条件对象
+	public synchronized void a(){//该方法在同一时间只有一个线程调用（同步方法）
+		wait();//条件阻塞
+		notifyAll();//激活阻塞
+		//这2个方法前提是对调用对象加锁，所以只能在 synchronized中使用
+	}	
+	
+	
+	
+同步阻塞
+	public synchronized void add(){
+			。。。
+	}
+	和
+	public void add(){
+		synchronized（this）{
+			。。。
+		}
+			
+	}
+	一样在同个对象中同步	
+
+
+synchronized 	
+	修饰实例方法，作用于当前实例加锁，进入同步代码前要获得当前实例的锁
+
+	修饰静态方法，作用于当前类对象加锁，进入同步代码前要获得当前类对象的锁
+
+	修饰代码块，指定加锁对象，对给定对象加锁，进入同步代码库前要获得给定对象的锁。
+	
+	
+	
+wait()和sleep()区别
+		1.sleep()是Thread中的方法，wait()是Object中的方法
+		2.wait会释放锁
+	
+
+	
+	
+Thread.yield()方法 暂停当前正在执行的线程对象，yield()只是使当前线程重新回到可执行状态，所以执行yield()的线程有可能在进入到可执行状态后马上又被执行，yield()只能使同优先级或更高优先级的线程有执行的机会。 
+
+Thread.Join()：把指定的线程加入到当前线程，可以将两个交替执行的线程合并为顺序执行的线程。比如在线程B中调用了线程A的Join()方法，直到线程A执行完毕后，才会继续执行线程B。	
+	
+	
+	
+volatile			
+	适用于一个线程写，多个线程都的场合
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	

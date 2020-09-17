@@ -1,0 +1,62 @@
+简单泛型类
+	class text<T>{//可以有多个<T,E>
+		public T a;
+		public text(T a) {
+			this.a=a;
+		}
+	}
+	使用
+	text<String> t=new text("qqq");
+	System.out.println(t.a);
+	
+类型变量的限定
+	<T,B extends a & b>
+	a和b为限定类型可以是类也可以是接口
+	
+泛型方法
+	public <T> T geta(T k) {//在返回类型和修饰符中间添加<>
+		return (T) a;
+	}
+	
+
+泛型类型的限定
+	<T extends a & b>//传入的T必须是绑定a和b类型（可以是类或者接口）的子类
+
+泛型都有一个原始类型
+	原始类型为限制类型
+	如果没有限制类型则为Object
+
+擦除
+	将所有的泛型擦除代替为限定类型，如果没有限定类型则为object
+
+编译器会将擦除返回类型添加强制类型转换
+
+约束
+	不能用基本数据类型实例化类型参数‘
+	
+	类型查询只会产生原始类型
+		例如泛型类Pain<T>
+			Pain<String> a=...
+			a.getClass=Pain.class
+			用instanceof只能测试是否为Pain不能知道泛型
+	
+	不能创建类型参数话的数组（用ArrayList<Pain<String>> b=..代替）
+		例如Pain<String>[] a=...因为擦除，不能检测出入值的泛型
+			a[0]=Pain<Integer>()//不会报错
+
+	不能实例化类型变量
+		例如：T a=new T()//错误的
+		
+	泛型类中静态的方法或属性中类型变量无效
+	
+	不能抛出捕获类型变量
+		catch（T e）错误
+		但是可以throws T
+		
+
+
+
+
+
+
+

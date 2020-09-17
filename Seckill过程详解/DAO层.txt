@@ -1,0 +1,72 @@
+DAO层
+	依赖
+		<!--1.数据库相关依赖-->
+		<dependency>
+		  <groupId>mysql</groupId>
+		  <artifactId>mysql-connector-java</artifactId>
+		  <version>8.0.11</version>
+		  <!--<scope>runtime</scope>-->
+		</dependency>
+		<!-- 数据库连接池 -->
+		<dependency>
+		  <groupId>com.alibaba</groupId>
+		  <artifactId>druid</artifactId>
+		  <version>1.1.10</version>
+		</dependency>
+		<!--2.dao框架:MyBatis依赖-->
+		<dependency>
+		  <groupId>org.mybatis</groupId>
+		  <artifactId>mybatis</artifactId>
+		  <version>3.3.0</version>
+		</dependency>
+		<!--mybatis自身实现的spring整合依赖-->
+		<dependency>
+		  <groupId>org.mybatis</groupId>
+		  <artifactId>mybatis-spring</artifactId>
+		  <version>1.2.3</version>
+		</dependency>
+		
+	1.dao包（接口）
+		//对数据库操作的方法接口
+		//例如查询全部，查询1列
+	2.entity包
+		//数据库中的一列为一个实体
+		记得写无参构造函数
+	
+	3.src/resources/mapper包（映射dao接口的sql语句）
+		//dao层方法接口对应的sql语句
+		
+	4.mybatis配置
+		//src/resources/mybatis-config.xml
+		<configuration>
+			<!--配置全局属性-->
+			<settings>
+				<!--使用jdbc的getGeneratedKeys获取数据库自增主键值-->
+				<setting name="useGeneratedKeys" value="true"/>
+				<!--使用列别名替换列名  默认为true
+				select name as title from table;//实体名和列名不一致
+				-->
+				<setting name="useColumnLabel" value="true"/>
+				<!--开启驼峰命名转换 例如create_time转换成createTime-->
+				<setting name="mapUnderscoreToCamelCase" value="true"/>
+			</settings>
+		</configuration>
+	5.与Spring整合配置
+		//src/resources/spring/spring-dao.xml
+		配置数据库连接池druid
+		
+		配置Mybatis的SqlSessionFactory对象
+		
+		配置扫描DAO接口，注入spring
+		
+	
+	6.数据库连接参数
+		//src/resources/jdbc.properties
+		driver=com.mysql.jdbc.Driver
+		url=jdbc:mysql://localhost:3306/seckill?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true
+		username=root
+		password=12345789
+	
+	
+	
+	

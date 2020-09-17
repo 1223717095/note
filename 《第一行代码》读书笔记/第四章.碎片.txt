@@ -1,0 +1,70 @@
+创建碎片
+	创建一个新的layout
+	<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    	android:orientation="vertical"
+    	android:layout_width="match_parent"
+    	android:layout_height="match_parent">
+
+    	<Button
+        	android:id="@+id/button"
+        	android:layout_width="wrap_content"
+        	android:layout_height="wrap_content"
+        	android:layout_gravity="center_horizontal"
+        	android:text="Button"
+        />
+
+	</LinearLayout>
+
+	创建一个新的类实现碎片
+	public class LeftFragment extends Fragment {
+    
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                                 Bundle savedInstanceState) {
+            View view = inflater.inflate(R.layout.left_fragment, container, false);
+            return view;
+        }
+    
+    }
+	在主界面中
+	<fragment
+        android:id="@+id/left_fragment"
+        android:name="com.example.fragmenttest.LeftFragment"//碎片类
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+	动态添加碎片
+	Fragment fragment=new Fragment();
+	FragmentManager fragmentManager = getSupportFragmentManager();//获取FragmentManager
+        FragmentTransaction transaction = fragmentManager.beginTransaction();//开启事务
+        transaction.replace(R.id.right_layout, fragment);//添加或替换碎片
+        transaction.addToBackStack(null);//将事务添加到返回栈
+        transaction.commit();//提交事务
+	
+
+碎片与活动的通信
+
+在活动中获取碎片
+	RightFragment rightFragment=(RightFragment)getSupportFragmentManager().findFragmentById(R.id.right_fragment);
+
+在碎片中获取当前活动
+	MainActivity activity =(MainActivity)getActivity();
+
+碎片的几个回调方法
+	onAttach()碎片与活动建立联系时调用
+	onCreateView()为碎片加载视图时调用
+	onActivityCreate()与碎片关联的活动创建完毕时调用
+	onDestroyView()与碎片关联的视图被移除时调用
+	onDetach()碎片与活动解除关系时调用
+
+
+
+
+
+
+
+
+
+
+
+
